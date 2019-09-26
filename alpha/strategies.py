@@ -11,7 +11,8 @@ def emulateHawkDoveStrategy(hawk, dove, wealth):
 
 # Hawk-Hawk
 def emulateHawkHawkStrategy(hawk1, hawk2, wealth):
-    h = random.randrange(1, 11, 1)
+    # every fight costs the hawk a random number between 1 and 15
+    h = random.randrange(1, 16, 1)
     # hawk loses resource
     hawk1.wealth += wealth/2 - h
     hawk1.saySomething('I am hawk1. I gained ' + str(wealth/2 - h))
