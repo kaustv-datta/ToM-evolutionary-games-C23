@@ -31,3 +31,6 @@ class EvolutionaryModel(Model):
 model = EvolutionaryModel(50, 10, 10)
 for i in range(10):
     model.step()
+
+for agent in model.schedule.agents:
+    print("I'm a " + agent.strategy + " and I have " + str(agent.wealth))

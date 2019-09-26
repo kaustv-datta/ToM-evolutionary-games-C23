@@ -1,5 +1,6 @@
 from mesa import Agent
 import strategies
+import random
 
 # An evolutionary agent
 class EvolutionaryAgent(Agent):
@@ -24,10 +25,20 @@ class EvolutionaryAgent(Agent):
         cellmates = self.model.grid.get_cell_list_contents([self.pos])
         if len(cellmates) > 1:
             other = self.random.choice(cellmates)
+            wealth = random.randrange(1, 16, 1)
             # other.wealth += 1
             # self.wealth -= 1
             # self.saySomething()
-            strategies.emulateHawkDoveStrategy(self, other)
+            if self.strategy == 'hawk':
+                if other.strategy == 'dove':
+                    strategies.emulateHawkDoveStrategy(self, other, wealth)
+                else:
+                    strategies.emulateHawkHawkStrategy(self, other, wealth)
+            else:
+                if other.strategy == 'dove':
+                    strategies.emulateDoveDoveStrategy(self, other, wealth)
+                else:
+                    strategies.emulateHawkDoveStrategy(other, self, wealth)
             
     def saySomething(self, something):
         print(something)
