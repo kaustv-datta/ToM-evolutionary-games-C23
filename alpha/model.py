@@ -37,10 +37,26 @@ all_wealth = []
 all_strategies = []
 all_hawks = []
 all_doves = []
+
+n_hawks = []
+n_doves = []
 # EvolutionaryModel(N, width, height, step_cost, die_value, reproduce_value)
 model = EvolutionaryModel(50, 10, 10, 2, 0, 10)
-for i in range(10):
+
+n_steps=10
+for i in range(n_steps):
     model.step()
+    number_hawks = 0
+    number_doves = 0
+    for agent in model.schedule.agents:
+        if agent.strategy == "hawk":
+            number_hawks += 1
+        elif agent.strategy == "dove":
+            number_doves += 1
+
+    n_doves.append(number_doves)
+    n_hawks.append(number_hawks)
+
 
 for agent in model.schedule.agents:
     print("I'm a " + agent.strategy + " and I have " + str(agent.wealth))
@@ -54,6 +70,7 @@ for agent in model.schedule.agents:
         all_hawks.append(agent.wealth)
     else:
         all_doves.append(agent.wealth)
+
 # shows a histogram of the total number of hawks and doves
 plt.hist((all_strategies))
 plt.title("Total number of hawks and doves")
@@ -63,3 +80,10 @@ plt.hist((all_hawks, all_doves), label=('Hawks', 'Doves'))
 plt.title("Histogram of the wealth of hawks and doves")
 plt.legend()
 plt.show()
+
+plt.plot(n_hawks, label=('Hawks'))
+plt.plot(n_doves, label=('Doves'))
+plt.title("Plot of number of hawks and doves at each step")
+plt.legend()
+plt.show()
+

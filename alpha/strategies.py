@@ -6,7 +6,7 @@ def emulateHawkDoveStrategy(hawk, dove, wealth):
     # hawk gains resource
     hawk.wealth += wealth
     hawk.saySomething('I am hawk. I gained ' + str(wealth))
-    # dove loses resourse
+    # dove loses resource
     dove.saySomething('I am dove. I lost')
 
 # Hawk-Hawk
@@ -22,9 +22,9 @@ def emulateHawkHawkStrategy(hawk1, hawk2, wealth):
 
 # Dove-Dove
 def emulateDoveDoveStrategy(dove1, dove2, wealth):
-    # dove might gain or lose resource
+    # dove always shares resource
     dove1.wealth += wealth/2
     dove1.saySomething('I am dove1. I gained ' + str(wealth/2))
-    # dove might gain or lose resource
+    # dove always shares resource resource
     dove2.wealth += wealth/2
     dove2.saySomething('I am dove2. I gained ' + str(wealth/2))
