@@ -11,5 +11,5 @@ we use conda to create a virtual python environment
 
 >pip install -r requirements.txt
 
-## Running helloWorld
->python ./helloWorld/TwoAgentModel.py
+## Running alpha code
+>python ./alpha/model.py
