@@ -1,5 +1,5 @@
 import random
-strategyList = ['hawk','dove']
+strategyList = ['hawk', 'dove']
 
 # Hawk-Dove OR Dove-Hawk
 def emulateHawkDoveStrategy(hawk, dove, wealth):
@@ -11,24 +11,35 @@ def emulateHawkDoveStrategy(hawk, dove, wealth):
 
 # Hawk-Hawk
 def emulateHawkHawkStrategy(hawk1, hawk2, wealth):
-    # every fight costs the hawk a random number between 1 and 15
-    h = random.randrange(1, 16, 1)
-    # hawk loses resource
-    hawk1.wealth += wealth/2 - h
-    hawk1.saySomething('I am hawk1. I gained ' + str(wealth/2 - h))
-    # hawk loses resource
-    hawk2.wealth += wealth/2 - h
-    hawk2.saySomething('I am hawk2. I gained ' + str(wealth/2 - h))
+    # every fight costs the hawk a random number between 1 and 7
+    h = random.randrange(1, 8, 1)
+    # if wealth/2 > h its the prisoners dilemma, otherwise its the chicken game
+    # one of both will win/be the Hawk while the other looses/be the dove
+    player = [hawk1, hawk2]
+    winner = random.choice(player)
+    player.remove(winner)
+    looser = player[0]
+    if wealth/2 > h:
+        # prisoners dilemma:  both keep the hawk strategy, one will gain (V-h), the other will (loose -h)
+        winner.wealth += wealth - h
+        looser.wealth -= h
+    else:
+        # chicken game: one chooses Hawk (winner) and the other one Dove (looser)
+        winner.saySomething("We will play the Chicken Game. I am Hawk " + str(winner.unique_id) +
+                            " and I fight, while Hawk " + str(looser.unique_id) + " behaves as a dove")
+        emulateHawkDoveStrategy(winner, looser, wealth)
+
 
 # Dove-Dove
 def emulateDoveDoveStrategy(dove1, dove2, wealth):
+    player = [dove1, dove2]
     # random dove retreats
-    winner = random.choice([dove1, dove2])
+    winner = random.choice(player)
+    player.remove(winner)
+    looser = player[0]
     # the winner takes it all
     winner.wealth += wealth
     winner.saySomething('I am dove ' + str(winner.unique_id) + '. I gained ' + str(wealth))
     # the other dove doesn't gain anything
-    if winner.unique_id == dove1.unique_id:
-        dove2.saySomething('I am ' + str(dove2.unique_id) + ". I retreated")
-    else:
-        dove1.saySomething('I am ' + str(dove1.unique_id) + ". I retreated")
+    looser.saySomething('I am dove ' + str(looser.unique_id) + ". I retreated")
+
