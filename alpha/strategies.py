@@ -22,9 +22,13 @@ def emulateHawkHawkStrategy(hawk1, hawk2, wealth):
 
 # Dove-Dove
 def emulateDoveDoveStrategy(dove1, dove2, wealth):
-    # dove always shares resource
-    dove1.wealth += wealth/2
-    dove1.saySomething('I am dove1. I gained ' + str(wealth/2))
-    # dove always shares resource resource
-    dove2.wealth += wealth/2
-    dove2.saySomething('I am dove2. I gained ' + str(wealth/2))
+    # random dove retreats
+    winner = random.choice([dove1, dove2])
+    # the winner takes it all
+    winner.wealth += wealth
+    winner.saySomething('I am dove ' + str(winner.unique_id) + '. I gained ' + str(wealth))
+    # the other dove doesn't gain anything
+    if winner.unique_id == dove1.unique_id:
+        dove2.saySomething('I am ' + str(dove2.unique_id) + ". I retreated")
+    else:
+        dove1.saySomething('I am ' + str(dove1.unique_id) + ". I retreated")
