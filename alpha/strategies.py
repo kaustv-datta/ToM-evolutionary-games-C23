@@ -5,6 +5,13 @@ import math
 # List of available strategies
 strategyList = ['hawk', 'dove']
 
+# Type of game
+GAME_TYPES = [
+    'prisoners-dilema', # (1/2)V > h
+    'chicken-game'  # (1/2)V < h
+    ]
+ACTIVE_GAME_TYPE = ['prisoners-dilema']
+
 # Hawk-Dove OR Dove-Hawk
 def emulateHawkDoveStrategy(hawk, dove, wealth):
     # hawk gains resource
@@ -17,7 +24,8 @@ def emulateHawkDoveStrategy(hawk, dove, wealth):
 # Hawk-Hawk
 def emulateHawkHawkStrategy(hawk1, hawk2, wealth):
     # every fight costs the hawk a random number between 1 and 7
-    h = random.randrange(1, 8, 1)
+    # h = random.randrange(1, 8, 1)
+    h = getFightCost(wealth)
     # if wealth/2 > h its the prisoners dilemma, otherwise its the chicken game
     # one of both will win/be the Hawk while the other looses/be the dove
     player = [hawk1, hawk2]
@@ -55,6 +63,16 @@ def emulateDoveDoveStrategy(dove1, dove2, wealth):
                         str(wealth))
     # the other dove doesn't gain anything
     looser.saySomething('I am dove ' + str(looser.unique_id) + ". I retreated")
+
+
+# Get cost of interaction or fight
+def getFightCost(V):
+    h = 0
+    if ACTIVE_GAME_TYPE == 'prisoners-dilema':
+        h = random.uniform(0, V/2)
+    elif ACTIVE_GAME_TYPE == 'chicken-game':
+        h = random.uniform(V/2, V)
+    return h
 
 
 # Kill agents with bad performing strategies and replicate the good strategies
