@@ -28,9 +28,6 @@ class EvolutionaryAgent(Agent):
         if len(cellmates) > 1:
             other = self.random.choice(cellmates)
             self.chooseInteraction(other)
-            # Check if dying
-            self.checkToDie(self)
-            self.checkToDie(other)
 
     def chooseInteraction(self, other):
         # Fight for wealth, which is a random number between 1 an 15
@@ -59,30 +56,32 @@ class EvolutionaryAgent(Agent):
         self.model.grid.place_agent(a, self.pos)
         self.model.schedule.add(a)
 
-    def die(self, agent):
+    def die(self):
         # Death
         # print('I am a ' + agent.strategy + str(agent.unique_id) + ' and I am dead')
-        agent.model.grid._remove_agent(agent.pos, agent)
-        agent.model.schedule.remove(agent)
+        self.model.grid._remove_agent(self.pos, self)
+        self.model.schedule.remove(self)
 
-    def checkToDie(self, agent):
+    def checkToDie(self):
         # if the wealth of the agent is lower than the 'die_value', the die() method will be called
         living = True
-        if agent.wealth <= self.model.die_value:
+        if self.wealth <= self.model.die_value:
             living = False
-            agent.die(agent)
+            self.die()
         return living
 
     
     # Action to be performed per tick of the model
     def step(self):
+        # TODO: To Be Discussed - commenting for now to conform to the paper
         # decreases the wealth of an agent by the step_costs
-        self.wealth -= self.model.step_cost
+        # self.wealth -= self.model.step_cost
         # checks if the agent will make it the next round
-        living = self.checkToDie(self)
-        if living:
-            self.move()
-            self.interact()
-            # if the agent has reached a wealth higher than the reproduce_value, it will reproduce itselfe
-            if self.wealth > self.model.reproduce_value:
-                self.reproduce()
+        # living = self.checkToDie()
+        # if living:
+        self.move()
+        self.interact()
+        # TODO: To Be Discussed - paper mentions strategies replicating
+        # if the agent has reached a wealth higher than the reproduce_value, it will reproduce itselfe
+        # if self.wealth > self.model.reproduce_value:
+        #     self.reproduce()

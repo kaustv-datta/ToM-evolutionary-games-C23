@@ -1,6 +1,7 @@
 from mesa import Model
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
+from mesa.datacollection import DataCollector
 from agent import EvolutionaryAgent
 import strategies
 import random
@@ -29,9 +30,11 @@ class EvolutionaryModel(Model):
             x = self.random.randrange(self.grid.width)
             y = self.random.randrange(self.grid.height)
             self.grid.place_agent(a, (x, y))
-            
+
     def step(self):
         self.schedule.step()
+        # Natural selection
+        strategies.naturalSelection(self)
 
 all_wealth = []
 all_strategies = []
@@ -60,7 +63,6 @@ for i in range(n_steps):
 
 for agent in model.schedule.agents:
     print("I'm a " + agent.strategy + " and I have " + str(agent.wealth))
-print(model.schedule.agents.__len__())
 
 # Store the results
 for agent in model.schedule.agents:
@@ -86,4 +88,3 @@ plt.plot(n_doves, label=('Doves'))
 plt.title("Plot of number of hawks and doves at each step")
 plt.legend()
 plt.show()
-
