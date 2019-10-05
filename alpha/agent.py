@@ -73,15 +73,5 @@ class EvolutionaryAgent(Agent):
     
     # Action to be performed per tick of the model
     def step(self):
-        # TODO: To Be Discussed - commenting for now to conform to the paper
-        # decreases the wealth of an agent by the step_costs
-        # self.wealth -= self.model.step_cost
-        # checks if the agent will make it the next round
-        # living = self.checkToDie()
-        # if living:
         self.move()
         self.interact()
-        # TODO: To Be Discussed - paper mentions strategies replicating
-        # if the agent has reached a wealth higher than the reproduce_value, it will reproduce itselfe
-        # if self.wealth > self.model.reproduce_value:
-        #     self.reproduce()

@@ -23,8 +23,6 @@ def emulateHawkDoveStrategy(hawk, dove, wealth):
 
 # Hawk-Hawk
 def emulateHawkHawkStrategy(hawk1, hawk2, wealth):
-    # every fight costs the hawk a random number between 1 and 7
-    # h = random.randrange(1, 8, 1)
     h = getFightCost(wealth)
     # if wealth/2 > h its the prisoners dilemma, otherwise its the chicken game
     # one of both will win/be the Hawk while the other looses/be the dove
@@ -117,7 +115,7 @@ def naturalSelection(model):
             agent.wealth for agent in strategy_specific_agents]
         strategy_average_wealth = statistics.mean(strategy_specific_wealth)
 
-        # If this is a winning strategy - replicate the strategy accross the population
+        # If this is a winning strategy - replicate more agents with this strategy
         # No. of repliactions is proportional to how high the average strategy
         # wealth is above the overall average wealth
         if strategy_average_wealth > average_wealth:
@@ -129,4 +127,4 @@ def naturalSelection(model):
             agents_to_replicate = random.sample(
                 all_agents, num_agents_to_replicate)
             for agent in agents_to_replicate:
-                agent.strategy = strategy
+                agent.reproduce()
