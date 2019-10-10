@@ -3,7 +3,13 @@ import statistics
 import math
 
 # List of available strategies
-strategyList = ['hawk', 'dove']
+strategyList = [
+    {'name': 'hawk', 'trader': False, 'nonTradeStrategy': 'hawk'},
+    {'name': 'dove', 'trader': False, 'nonTradeStrategy': 'dove'},
+    {'name': 'traderHawk', 'trader': True, 'nonTradeStrategy': 'hawk'},
+    {'name': 'traderDove', 'trader': True, 'nonTradeStrategy': 'dove'}
+    ]
+
 
 # Type of game
 GAME_TYPES = [
@@ -62,6 +68,54 @@ def emulateDoveDoveStrategy(dove1, dove2, wealth):
     # the other dove doesn't gain anything
     looser.saySomething('I am dove ' + str(looser.unique_id) + ". I retreated")
 
+# Traders
+def emulateTraders(owner, intruder):
+    # intruder values the property V = 0.9 * intruder.wealth
+    # owner values the property v = owner.owner
+    # owner sells the property for x = (V + v) / 2
+    x = round((0.8 * intruder.wealth + owner.owner) / 2)
+    owner.owner = 0
+    owner.wealth += x
+    intruder.owner = x
+    intruder.wealth -= x
+    owner.saySomething('We will trade')
+
+def emulatePossessorDove(possessor, dove):
+    # The possessor acts as a hawk
+    # hawk gains resource
+    # The wealth of the house increases to x according the matrix
+    # x = (0.8 * dove.wealth + possessor.owner) / 2
+    # possessor.owner = x
+    # dove.owner = 0
+    possessor.saySomething('The possessor takes it all')
+
+def emulatePossessorHawk(possessor, hawk):
+    # The possessor acts as a hawk
+    x = round((possessor.owner + 0.8 * hawk.wealth) / 2)
+    h = getFightCost(x)
+    # if wealth/2 > h its the prisoners dilemma, otherwise its the chicken game
+    # one of both will win/be the Hawk while the other looses/be the dove
+    player = [possessor, hawk]
+    winner = random.choice(player)
+    player.remove(winner)
+    looser = player[0]
+    if x / 2 > h:
+        # prisoners dilemma:  both keep the hawk strategy, one will gain (V-h),
+        # the other will (loose -h)
+        winner.wealth = - h
+        winner.owner = x
+        looser.wealth -= h
+        looser.owner = 0
+        possessor.saySomething('Property Prisoners dilemma')
+    else:
+        # chicken game: one chooses Hawk (winner) and the other one Dove
+        # (looser)
+        x = (0.8 * hawk.wealth + possessor.owner) / 2
+        winner.owner = x
+        looser.owner = 0
+        possessor.saySomething('Property Chicken Game')
+
+
 
 # Get cost of interaction or fight
 def getFightCost(V):
@@ -76,7 +130,7 @@ def getFightCost(V):
 # Kill agents with bad performing strategies and replicate the good strategies
 def naturalSelection(model):
     all_agents = model.schedule.agents
-    agent_wealths = [agent.wealth for agent in all_agents]
+    agent_wealths = [agent.owner + agent.wealth for agent in all_agents]
     average_wealth = statistics.mean(agent_wealths)
 
     for strategy in strategyList:
@@ -87,14 +141,14 @@ def naturalSelection(model):
         if len(strategy_specific_agents) == 0:
             continue
         strategy_specific_wealth = [
-            agent.wealth for agent in strategy_specific_agents]
+            agent.wealth + agent.owner for agent in strategy_specific_agents]
         strategy_average_wealth = statistics.mean(strategy_specific_wealth)
 
         # If this is a loosing strategy - kill some agents using this strategy
         # No. of agents to kill is proportional to how less the average
         # strategy wealth is below the overall average wealth
         if average_wealth > strategy_average_wealth:
-            print('------LOSING----' + strategy)
+            print('------LOSING----' + strategy['name'])
             percentage_to_kill = (
                 average_wealth - strategy_average_wealth) / average_wealth
             num_agents_to_kill = math.ceil(
@@ -112,14 +166,14 @@ def naturalSelection(model):
         if len(strategy_specific_agents) == 0:
             continue
         strategy_specific_wealth = [
-            agent.wealth for agent in strategy_specific_agents]
+            agent.wealth + agent.owner for agent in strategy_specific_agents]
         strategy_average_wealth = statistics.mean(strategy_specific_wealth)
 
         # If this is a winning strategy - replicate more agents with this strategy
         # No. of repliactions is proportional to how high the average strategy
         # wealth is above the overall average wealth
         if strategy_average_wealth > average_wealth:
-            print('------WINNING----' + strategy)
+            print('------WINNING----' + strategy['name'])
             percentage_to_replicate = (
                 strategy_average_wealth - average_wealth) / average_wealth
             num_agents_to_replicate = math.ceil(
