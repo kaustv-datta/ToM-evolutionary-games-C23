@@ -24,11 +24,11 @@ class EvolutionaryModel(Model):
             evolutionaryStrategy = random.choice(strategies.strategyList)
             # Initial Wealth is set to a random number between 1 and 15
             initialWealth = random.randrange(1, 16, 1)
-            # 80 % are owners
+            # 50 % are owners
             owner = 0
             if random.randrange(1, 11, 1) <= 5:
-                owner = round(0.9 * initialWealth)
-                initialWealth = round(0.1 * initialWealth)
+                owner = round(0.8 * initialWealth)
+                initialWealth = round(0.2 * initialWealth)
             a = EvolutionaryAgent(i, self, evolutionaryStrategy, initialWealth, owner)
             self.schedule.add(a)
 
@@ -74,7 +74,7 @@ for i in range(n_steps):
             number_hawks += 1
         elif agent.strategy['name'] == "dove":
             number_doves += 1
-        if agent.strategy['name'] == "traderHawk":
+        elif agent.strategy['name'] == "traderHawk":
             number_TraderHawks += 1
         else:
             number_TraderDoves += 1
@@ -124,7 +124,6 @@ plt.plot(n_hawks, label=('Hawks'))
 plt.plot(n_doves, label=('Doves'))
 plt.plot(n_traderHawks, label=('Trader Hawks'))
 plt.plot(n_traderDoves, label=('Trader Doves'))
-plt.plot()
 plt.title("Plot of number of hawks and doves at each step")
 plt.legend()
 plt.show()

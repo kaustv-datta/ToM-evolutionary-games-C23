@@ -75,8 +75,8 @@ class EvolutionaryAgent(Agent):
         # a newborn has a probability to own a property of 50 %
         owner = 0
         if random.randrange(1, 11, 1) <= 5:
-            owner = round(0.9 * initialWealth)
-            initialWealth = round(0.1 * initialWealth)
+            owner = round(0.8 * initialWealth)
+            initialWealth = round(0.2 * initialWealth)
         a = EvolutionaryAgent(new_unique_id, self.model, self.strategy, initialWealth, owner)
         # the reproduced agent will stay on the same position as the parent
         self.model.grid.place_agent(a, self.pos)

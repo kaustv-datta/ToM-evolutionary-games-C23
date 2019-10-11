@@ -16,7 +16,7 @@ GAME_TYPES = [
     'prisoners-dilema', # (1/2)V > h
     'chicken-game'  # (1/2)V < h
     ]
-ACTIVE_GAME_TYPE = ['prisoners-dilema']
+ACTIVE_GAME_TYPE = 'prisoners-dilema'
 
 # Hawk-Dove OR Dove-Hawk
 def emulateHawkDoveStrategy(hawk, dove, wealth):
@@ -70,7 +70,7 @@ def emulateDoveDoveStrategy(dove1, dove2, wealth):
 
 # Traders
 def emulateTraders(owner, intruder):
-    # intruder values the property V = 0.9 * intruder.wealth
+    # intruder values the property V = 0.8 * intruder.wealth
     # owner values the property v = owner.owner
     # owner sells the property for x = (V + v) / 2
     x = round((0.8 * intruder.wealth + owner.owner) / 2)
@@ -78,15 +78,15 @@ def emulateTraders(owner, intruder):
     owner.wealth += x
     intruder.owner = x
     intruder.wealth -= x
-    owner.saySomething('We will trade')
+    owner.saySomething('We are trading')
 
 def emulatePossessorDove(possessor, dove):
     # The possessor acts as a hawk
     # hawk gains resource
     # The wealth of the house increases to x according the matrix
-    # x = (0.8 * dove.wealth + possessor.owner) / 2
-    # possessor.owner = x
-    # dove.owner = 0
+    x = (0.8 * dove.wealth + possessor.owner) / 2
+    possessor.owner = x
+    dove.owner = 0
     possessor.saySomething('The possessor takes it all')
 
 def emulatePossessorHawk(possessor, hawk):
@@ -121,9 +121,9 @@ def emulatePossessorHawk(possessor, hawk):
 def getFightCost(V):
     h = 0
     if ACTIVE_GAME_TYPE == 'prisoners-dilema':
-        h = random.uniform(0, V/2)
+        h = round(random.uniform(0, V/2))
     elif ACTIVE_GAME_TYPE == 'chicken-game':
-        h = random.uniform(V/2, V)
+        h = round(random.uniform(V/2, V))
     return h
 
 
@@ -153,8 +153,11 @@ def naturalSelection(model):
                 average_wealth - strategy_average_wealth) / average_wealth
             num_agents_to_kill = math.ceil(
                 percentage_to_kill * len(strategy_specific_agents))
-            agents_to_kill = random.sample(
-                strategy_specific_agents, num_agents_to_kill)
+            if len(strategy_specific_agents) <= num_agents_to_kill:
+                agents_to_kill = strategy_specific_agents
+            else:
+                agents_to_kill = random.sample(
+                    strategy_specific_agents, num_agents_to_kill)
             for agent in agents_to_kill:
                 agent.die()
 
@@ -177,8 +180,11 @@ def naturalSelection(model):
             percentage_to_replicate = (
                 strategy_average_wealth - average_wealth) / average_wealth
             num_agents_to_replicate = math.ceil(
-                percentage_to_replicate * len(all_agents))
-            agents_to_replicate = random.sample(
-                all_agents, num_agents_to_replicate)
+                percentage_to_replicate * len(strategy_specific_agents))
+            if len(strategy_specific_agents) <= num_agents_to_replicate:
+                agents_to_replicate = strategy_specific_agents
+            else:
+                agents_to_replicate = random.sample(
+                    strategy_specific_agents, num_agents_to_replicate)
             for agent in agents_to_replicate:
                 agent.reproduce()
