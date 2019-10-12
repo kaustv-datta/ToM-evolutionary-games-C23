@@ -1,6 +1,13 @@
 import random
 import statistics
 import math
+import configparser
+import io
+
+# Load the configuration file
+CONFIG = configparser.ConfigParser()
+CONFIG.read("./config/config.ini")
+CONFIG_MODEL = CONFIG['model']
 
 # List of available strategies
 strategyList = [
@@ -12,11 +19,7 @@ strategyList = [
 
 
 # Type of game
-GAME_TYPES = [
-    'prisoners-dilema', # (1/2)V > h
-    'chicken-game'  # (1/2)V < h
-    ]
-ACTIVE_GAME_TYPE = 'prisoners-dilema'
+ACTIVE_GAME_TYPE = CONFIG_MODEL['game_type']
 
 # Hawk-Dove OR Dove-Hawk
 def emulateHawkDoveStrategy(hawk, dove, wealth):

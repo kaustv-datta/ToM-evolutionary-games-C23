@@ -6,6 +6,8 @@ from agent import EvolutionaryAgent
 import strategies
 import random
 import matplotlib.pyplot as plt
+import configparser
+import io
 
 # Main model which controls the agents
 class EvolutionaryModel(Model):
@@ -43,6 +45,11 @@ class EvolutionaryModel(Model):
         strategies.naturalSelection(self)
 
 
+# Load the configuration file
+CONFIG = configparser.ConfigParser()
+CONFIG.read("./config/config.ini")
+CONFIG_MODEL = CONFIG['model']
+
 all_wealth = []
 all_strategies = []
 all_hawks = []
@@ -56,7 +63,7 @@ n_traderHawks = []
 n_traderDoves = []
 n_traders = []
 n_nonTraders = []
-n_steps = 25
+n_steps = int(CONFIG_MODEL['total_agents'])
 # EvolutionaryModel(N, width, height, step_cost, die_value, reproduce_value)
 model = EvolutionaryModel(n_steps, 10, 10, 2, 0, 10)
 
