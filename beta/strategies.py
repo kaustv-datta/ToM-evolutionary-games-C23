@@ -3,10 +3,11 @@ import statistics
 import math
 import configparser
 import io
+import os
 
 # Load the configuration file
 CONFIG = configparser.ConfigParser()
-CONFIG.read("./config/config.ini")
+CONFIG.read('./config/config.ini')
 CONFIG_MODEL = CONFIG['model']
 
 # List of available strategies

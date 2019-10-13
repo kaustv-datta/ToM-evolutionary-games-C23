@@ -11,5 +11,6 @@ we use conda to create a virtual python environment
 
 >pip install -r requirements.txt
 
-## Running alpha code
->python ./alpha/model.py
+## Running beta code
+>cd beta
+>python model.py
