@@ -5,10 +5,11 @@ import random
 # An evolutionary agent
 class EvolutionaryAgent(Agent):
     """ An agent with fixed initial wealth."""
-    def __init__(self, unique_id, model, initialStrategy, wealth):
+    def __init__(self, unique_id, model, initialStrategy, wealth, owner):
         super().__init__(unique_id, model)
         self.wealth = wealth
         self.strategy = initialStrategy
+        self.owner = owner
         
     # Move to a random surrounding tile
     def move(self):
@@ -28,20 +29,35 @@ class EvolutionaryAgent(Agent):
         if len(cellmates) > 1:
             other = self.random.choice(cellmates)
             self.chooseInteraction(other)
-            # Check if dying
-            self.checkToDie(self)
-            self.checkToDie(other)
 
     def chooseInteraction(self, other):
+        if self.owner > 0 and other.owner == 0:
+            self.chooseOwnerIntruderInteraction(self, other)
+        elif self.owner == 0 and other.owner > 0:
+            self.chooseOwnerIntruderInteraction(other, self)
+        else:
+            self.chooseWealthInteraction(other)
+
+    def chooseOwnerIntruderInteraction(self, owner, intruder):
+        # The intruder values the property as v = 0.9 of its own wealth
+        # Agents will trade if both are traders and if the intruder values the property more then the owner
+        if owner.strategy['trader'] and intruder.strategy['trader'] and owner.owner < round(0.8 * intruder.wealth):
+            strategies.emulateTraders(owner, intruder)
+        elif intruder.strategy['nonTradeStrategy'] == 'dove':
+            strategies.emulatePossessorDove(owner, intruder)
+        else:
+            strategies.emulatePossessorHawk(owner, intruder)
+
+    def chooseWealthInteraction(self, other):
         # Fight for wealth, which is a random number between 1 an 15
         wealth = random.randrange(1, 16, 1)
-        if self.strategy == 'hawk':
-            if other.strategy == 'dove':
+        if self.strategy['nonTradeStrategy'] == 'hawk':
+            if other.strategy['nonTradeStrategy'] == 'dove':
                 strategies.emulateHawkDoveStrategy(self, other, wealth)
             else:
                 strategies.emulateHawkHawkStrategy(self, other, wealth)
         else:
-            if other.strategy == 'dove':
+            if other.strategy['nonTradeStrategy'] == 'dove':
                 strategies.emulateDoveDoveStrategy(self, other, wealth)
             else:
                 strategies.emulateHawkDoveStrategy(other, self, wealth)
@@ -54,35 +70,34 @@ class EvolutionaryAgent(Agent):
         # print('I am a ' + self.strategy + str(self.unique_id) + ' and I am reproducing')
         new_unique_id = self.model.latest_id + 1
         self.model.latest_id += 1
-        a = EvolutionaryAgent(new_unique_id, self.model, self.strategy, 10)
+        # Initial Wealth is set to a random number between 1 and 16
+        initialWealth = random.randrange(1, 16, 1)
+        # a newborn has a probability to own a property of 50 %
+        owner = 0
+        if random.randrange(1, 11, 1) <= 5:
+            owner = round(0.8 * initialWealth)
+            initialWealth = round(0.2 * initialWealth)
+        a = EvolutionaryAgent(new_unique_id, self.model, self.strategy, initialWealth, owner)
         # the reproduced agent will stay on the same position as the parent
         self.model.grid.place_agent(a, self.pos)
         self.model.schedule.add(a)
 
-    def die(self, agent):
+    def die(self):
         # Death
         # print('I am a ' + agent.strategy + str(agent.unique_id) + ' and I am dead')
-        agent.model.grid._remove_agent(agent.pos, agent)
-        agent.model.schedule.remove(agent)
+        self.model.grid._remove_agent(self.pos, self)
+        self.model.schedule.remove(self)
 
-    def checkToDie(self, agent):
+    def checkToDie(self):
         # if the wealth of the agent is lower than the 'die_value', the die() method will be called
         living = True
-        if agent.wealth <= self.model.die_value:
+        if self.wealth <= self.model.die_value:
             living = False
-            agent.die(agent)
+            self.die()
         return living
 
     
     # Action to be performed per tick of the model
     def step(self):
-        # decreases the wealth of an agent by the step_costs
-        self.wealth -= self.model.step_cost
-        # checks if the agent will make it the next round
-        living = self.checkToDie(self)
-        if living:
-            self.move()
-            self.interact()
-            # if the agent has reached a wealth higher than the reproduce_value, it will reproduce itselfe
-            if self.wealth > self.model.reproduce_value:
-                self.reproduce()
+        self.move()
+        self.interact()

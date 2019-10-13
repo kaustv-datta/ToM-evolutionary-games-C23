@@ -1,5 +1,25 @@
 import random
-strategyList = ['hawk','dove']
+import statistics
+import math
+import configparser
+import io
+
+# Load the configuration file
+CONFIG = configparser.ConfigParser()
+CONFIG.read("./config/config.ini")
+CONFIG_MODEL = CONFIG['model']
+
+# List of available strategies
+strategyList = [
+    {'name': 'hawk', 'trader': False, 'nonTradeStrategy': 'hawk'},
+    {'name': 'dove', 'trader': False, 'nonTradeStrategy': 'dove'},
+    {'name': 'traderHawk', 'trader': True, 'nonTradeStrategy': 'hawk'},
+    {'name': 'traderDove', 'trader': True, 'nonTradeStrategy': 'dove'}
+    ]
+
+
+# Type of game
+ACTIVE_GAME_TYPE = CONFIG_MODEL['game_type']
 
 # Hawk-Dove OR Dove-Hawk
 def emulateHawkDoveStrategy(hawk, dove, wealth):
@@ -9,22 +29,165 @@ def emulateHawkDoveStrategy(hawk, dove, wealth):
     # dove loses resource
     dove.saySomething('I am dove. I lost')
 
+
 # Hawk-Hawk
 def emulateHawkHawkStrategy(hawk1, hawk2, wealth):
-    # every fight costs the hawk a random number between 1 and 15
-    h = random.randrange(1, 16, 1)
-    # hawk loses resource
-    hawk1.wealth += wealth/2 - h
-    hawk1.saySomething('I am hawk1. I gained ' + str(wealth/2 - h))
-    # hawk loses resource
-    hawk2.wealth += wealth/2 - h
-    hawk2.saySomething('I am hawk2. I gained ' + str(wealth/2 - h))
+    h = getFightCost(wealth)
+    # if wealth/2 > h its the prisoners dilemma, otherwise its the chicken game
+    # one of both will win/be the Hawk while the other looses/be the dove
+    player = [hawk1, hawk2]
+    winner = random.choice(player)
+    player.remove(winner)
+    looser = player[0]
+    if wealth / 2 > h:
+        # prisoners dilemma:  both keep the hawk strategy, one will gain (V-h),
+        # the other will (loose -h)
+        winner.wealth += wealth - h
+        looser.wealth -= h
+    else:
+        # chicken game: one chooses Hawk (winner) and the other one Dove
+        # (looser)
+        winner.saySomething("We will play the Chicken Game. I am Hawk " +
+                            str(winner.unique_id) +
+                            " and I fight, while Hawk " +
+                            str(looser.unique_id) +
+                            " behaves as a dove")
+        emulateHawkDoveStrategy(winner, looser, wealth)
+
 
 # Dove-Dove
 def emulateDoveDoveStrategy(dove1, dove2, wealth):
-    # dove always shares resource
-    dove1.wealth += wealth/2
-    dove1.saySomething('I am dove1. I gained ' + str(wealth/2))
-    # dove always shares resource resource
-    dove2.wealth += wealth/2
-    dove2.saySomething('I am dove2. I gained ' + str(wealth/2))
+    player = [dove1, dove2]
+    # random dove retreats
+    winner = random.choice(player)
+    player.remove(winner)
+    looser = player[0]
+    # the winner takes it all
+    winner.wealth += wealth
+    winner.saySomething('I am dove ' +
+                        str(winner.unique_id) +
+                        '. I gained ' +
+                        str(wealth))
+    # the other dove doesn't gain anything
+    looser.saySomething('I am dove ' + str(looser.unique_id) + ". I retreated")
+
+# Traders
+def emulateTraders(owner, intruder):
+    # intruder values the property V = 0.8 * intruder.wealth
+    # owner values the property v = owner.owner
+    # owner sells the property for x = (V + v) / 2
+    x = round((0.8 * intruder.wealth + owner.owner) / 2)
+    owner.owner = 0
+    owner.wealth += x
+    intruder.owner = x
+    intruder.wealth -= x
+    owner.saySomething('We are trading')
+
+def emulatePossessorDove(possessor, dove):
+    # The possessor acts as a hawk
+    # hawk gains resource
+    # The wealth of the house increases to x according the matrix
+    x = (0.8 * dove.wealth + possessor.owner) / 2
+    possessor.owner = x
+    dove.owner = 0
+    possessor.saySomething('The possessor takes it all')
+
+def emulatePossessorHawk(possessor, hawk):
+    # The possessor acts as a hawk
+    x = round((possessor.owner + 0.8 * hawk.wealth) / 2)
+    h = getFightCost(x)
+    # if wealth/2 > h its the prisoners dilemma, otherwise its the chicken game
+    # one of both will win/be the Hawk while the other looses/be the dove
+    player = [possessor, hawk]
+    winner = random.choice(player)
+    player.remove(winner)
+    looser = player[0]
+    if x / 2 > h:
+        # prisoners dilemma:  both keep the hawk strategy, one will gain (V-h),
+        # the other will (loose -h)
+        winner.wealth = - h
+        winner.owner = x
+        looser.wealth -= h
+        looser.owner = 0
+        possessor.saySomething('Property Prisoners dilemma')
+    else:
+        # chicken game: one chooses Hawk (winner) and the other one Dove
+        # (looser)
+        x = (0.8 * hawk.wealth + possessor.owner) / 2
+        winner.owner = x
+        looser.owner = 0
+        possessor.saySomething('Property Chicken Game')
+
+
+
+# Get cost of interaction or fight
+def getFightCost(V):
+    h = 0
+    if ACTIVE_GAME_TYPE == 'prisoners-dilema':
+        h = round(random.uniform(0, V/2))
+    elif ACTIVE_GAME_TYPE == 'chicken-game':
+        h = round(random.uniform(V/2, V))
+    return h
+
+
+# Kill agents with bad performing strategies and replicate the good strategies
+def naturalSelection(model):
+    all_agents = model.schedule.agents
+    agent_wealths = [agent.owner + agent.wealth for agent in all_agents]
+    average_wealth = statistics.mean(agent_wealths)
+
+    for strategy in strategyList:
+        # get fresh list of agents after each iteration
+        all_agents = model.schedule.agents
+        strategy_specific_agents = [
+            agent for agent in all_agents if agent.strategy == strategy]
+        if len(strategy_specific_agents) == 0:
+            continue
+        strategy_specific_wealth = [
+            agent.wealth + agent.owner for agent in strategy_specific_agents]
+        strategy_average_wealth = statistics.mean(strategy_specific_wealth)
+
+        # If this is a loosing strategy - kill some agents using this strategy
+        # No. of agents to kill is proportional to how less the average
+        # strategy wealth is below the overall average wealth
+        if average_wealth > strategy_average_wealth:
+            print('------LOSING----' + strategy['name'])
+            percentage_to_kill = (
+                average_wealth - strategy_average_wealth) / average_wealth
+            num_agents_to_kill = math.ceil(
+                percentage_to_kill * len(strategy_specific_agents))
+            if len(strategy_specific_agents) <= num_agents_to_kill:
+                agents_to_kill = strategy_specific_agents
+            else:
+                agents_to_kill = random.sample(
+                    strategy_specific_agents, num_agents_to_kill)
+            for agent in agents_to_kill:
+                agent.die()
+
+    for strategy in strategyList:
+        # get fresh list of agents after each iteration
+        all_agents = model.schedule.agents
+        strategy_specific_agents = [
+            agent for agent in all_agents if agent.strategy == strategy]
+        if len(strategy_specific_agents) == 0:
+            continue
+        strategy_specific_wealth = [
+            agent.wealth + agent.owner for agent in strategy_specific_agents]
+        strategy_average_wealth = statistics.mean(strategy_specific_wealth)
+
+        # If this is a winning strategy - replicate more agents with this strategy
+        # No. of repliactions is proportional to how high the average strategy
+        # wealth is above the overall average wealth
+        if strategy_average_wealth > average_wealth:
+            print('------WINNING----' + strategy['name'])
+            percentage_to_replicate = (
+                strategy_average_wealth - average_wealth) / average_wealth
+            num_agents_to_replicate = math.ceil(
+                percentage_to_replicate * len(strategy_specific_agents))
+            if len(strategy_specific_agents) <= num_agents_to_replicate:
+                agents_to_replicate = strategy_specific_agents
+            else:
+                agents_to_replicate = random.sample(
+                    strategy_specific_agents, num_agents_to_replicate)
+            for agent in agents_to_replicate:
+                agent.reproduce()

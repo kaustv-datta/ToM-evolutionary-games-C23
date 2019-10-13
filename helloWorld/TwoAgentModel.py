@@ -121,7 +121,7 @@ for i in range(10):
 # Visualize wealth of agents
 
 # For a jupyter notebook add the following line:
-get_ipython().run_line_magic('matplotlib', 'inline')
+# get_ipython().run_line_magic('matplotlib', 'inline')
 
 # The below is needed for both notebooks and scripts
 import matplotlib.pyplot as plt
@@ -130,7 +130,7 @@ agent_wealth = [a.wealth for a in model.schedule.agents]
 plt.hist(agent_wealth)
 
 # If running from a text editor or IDE, remember you'll need the following:
-# plt.show()
+plt.show()
 
 
 # In[8]:
@@ -149,7 +149,7 @@ plt.imshow(agent_counts, interpolation='nearest')
 plt.colorbar()
 
 # If running from a text editor or IDE, remember you'll need the following:
-# plt.show()
+plt.show()
 
 
 # In[ ]:
