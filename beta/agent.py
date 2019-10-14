@@ -35,32 +35,23 @@ class EvolutionaryAgent(Agent):
             self.chooseOwnerIntruderInteraction(self, other)
         elif self.owner == 0 and other.owner > 0:
             self.chooseOwnerIntruderInteraction(other, self)
-        else:
-            self.chooseWealthInteraction(other)
 
     def chooseOwnerIntruderInteraction(self, owner, intruder):
         # The intruder values the property as v = 0.9 of its own wealth
         # Agents will trade if both are traders and if the intruder values the property more then the owner
-        if owner.strategy['trader'] and intruder.strategy['trader'] and owner.owner < round(0.8 * intruder.wealth):
+        if owner.strategy == 'trader' and intruder.strategy == 'trader' and owner.owner < round(0.8 * intruder.wealth):
             strategies.emulateTraders(owner, intruder)
-        elif intruder.strategy['nonTradeStrategy'] == 'dove':
-            strategies.emulatePossessorDove(owner, intruder)
+        if owner.strategy == 'hawk' or owner.strategy == 'possessor' or owner.strategy == 'trader':
+            if intruder.strategy == 'hawk':
+                strategies.emulateHawkHawkStrategy(owner, intruder)
+            else:
+                strategies.emulateHawkDoveStrategy(owner, intruder)
         else:
-            strategies.emulatePossessorHawk(owner, intruder)
+            if intruder.strategy == 'hawk':
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            else:
+                strategies.emulateDoveDoveStrategy(owner, intruder)
 
-    def chooseWealthInteraction(self, other):
-        # Fight for wealth, which is a random number between 1 an 15
-        wealth = random.randrange(1, 16, 1)
-        if self.strategy['nonTradeStrategy'] == 'hawk':
-            if other.strategy['nonTradeStrategy'] == 'dove':
-                strategies.emulateHawkDoveStrategy(self, other, wealth)
-            else:
-                strategies.emulateHawkHawkStrategy(self, other, wealth)
-        else:
-            if other.strategy['nonTradeStrategy'] == 'dove':
-                strategies.emulateDoveDoveStrategy(self, other, wealth)
-            else:
-                strategies.emulateHawkDoveStrategy(other, self, wealth)
             
     def saySomething(self, something):
         print(something)

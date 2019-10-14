@@ -11,40 +11,42 @@ CONFIG.read('./config/config.ini')
 CONFIG_MODEL = CONFIG['model']
 
 # List of available strategies
-strategyList = [
-    {'name': 'hawk', 'trader': False, 'nonTradeStrategy': 'hawk'},
-    {'name': 'dove', 'trader': False, 'nonTradeStrategy': 'dove'},
-    {'name': 'traderHawk', 'trader': True, 'nonTradeStrategy': 'hawk'},
-    {'name': 'traderDove', 'trader': True, 'nonTradeStrategy': 'dove'}
-    ]
+strategyList = ['hawk', 'dove', 'possessor', 'trader']
+
 
 
 # Type of game
 ACTIVE_GAME_TYPE = CONFIG_MODEL['game_type']
 
 # Hawk-Dove OR Dove-Hawk
-def emulateHawkDoveStrategy(hawk, dove, wealth):
+def emulateHawkDoveStrategy(hawk, dove):
     # hawk gains resource
-    hawk.wealth += wealth
-    hawk.saySomething('I am hawk. I gained ' + str(wealth))
+    if dove.owner > 0:
+        hawk.owner = dove.owner
+        dove.owner = 0
+    hawk.saySomething('I am hawk. I gained ' + str(hawk.owner))
     # dove loses resource
     dove.saySomething('I am dove. I lost')
 
 
 # Hawk-Hawk
-def emulateHawkHawkStrategy(hawk1, hawk2, wealth):
-    h = getFightCost(wealth)
+def emulateHawkHawkStrategy(hawkO, hawkNO):
+    owner = hawkO.owner
+
+    h = getFightCost(owner)
     # if wealth/2 > h its the prisoners dilemma, otherwise its the chicken game
     # one of both will win/be the Hawk while the other looses/be the dove
-    player = [hawk1, hawk2]
+    player = [hawkO, hawkNO]
     winner = random.choice(player)
     player.remove(winner)
     looser = player[0]
-    if wealth / 2 > h:
+    if owner / 2 > h:
         # prisoners dilemma:  both keep the hawk strategy, one will gain (V-h),
         # the other will (loose -h)
-        winner.wealth += wealth - h
+        winner.wealth -= h
+        winner.owner = owner
         looser.wealth -= h
+        looser.owner = 0
     else:
         # chicken game: one chooses Hawk (winner) and the other one Dove
         # (looser)
@@ -53,22 +55,24 @@ def emulateHawkHawkStrategy(hawk1, hawk2, wealth):
                             " and I fight, while Hawk " +
                             str(looser.unique_id) +
                             " behaves as a dove")
-        emulateHawkDoveStrategy(winner, looser, wealth)
+        emulateHawkDoveStrategy(winner, looser)
 
 
 # Dove-Dove
-def emulateDoveDoveStrategy(dove1, dove2, wealth):
-    player = [dove1, dove2]
+def emulateDoveDoveStrategy(doveO, doveNO):
+    owner = doveO.owner
+    player = [doveO, doveNO]
     # random dove retreats
     winner = random.choice(player)
     player.remove(winner)
     looser = player[0]
     # the winner takes it all
-    winner.wealth += wealth
+    winner.owner = owner
+    looser.owner = 0
     winner.saySomething('I am dove ' +
                         str(winner.unique_id) +
                         '. I gained ' +
-                        str(wealth))
+                        str(owner))
     # the other dove doesn't gain anything
     looser.saySomething('I am dove ' + str(looser.unique_id) + ". I retreated")
 
@@ -83,41 +87,6 @@ def emulateTraders(owner, intruder):
     intruder.owner = x
     intruder.wealth -= x
     owner.saySomething('We are trading')
-
-def emulatePossessorDove(possessor, dove):
-    # The possessor acts as a hawk
-    # hawk gains resource
-    # The wealth of the house increases to x according the matrix
-    x = (0.8 * dove.wealth + possessor.owner) / 2
-    possessor.owner = x
-    dove.owner = 0
-    possessor.saySomething('The possessor takes it all')
-
-def emulatePossessorHawk(possessor, hawk):
-    # The possessor acts as a hawk
-    x = round((possessor.owner + 0.8 * hawk.wealth) / 2)
-    h = getFightCost(x)
-    # if wealth/2 > h its the prisoners dilemma, otherwise its the chicken game
-    # one of both will win/be the Hawk while the other looses/be the dove
-    player = [possessor, hawk]
-    winner = random.choice(player)
-    player.remove(winner)
-    looser = player[0]
-    if x / 2 > h:
-        # prisoners dilemma:  both keep the hawk strategy, one will gain (V-h),
-        # the other will (loose -h)
-        winner.wealth = - h
-        winner.owner = x
-        looser.wealth -= h
-        looser.owner = 0
-        possessor.saySomething('Property Prisoners dilemma')
-    else:
-        # chicken game: one chooses Hawk (winner) and the other one Dove
-        # (looser)
-        x = (0.8 * hawk.wealth + possessor.owner) / 2
-        winner.owner = x
-        looser.owner = 0
-        possessor.saySomething('Property Chicken Game')
 
 
 
@@ -152,7 +121,7 @@ def naturalSelection(model):
         # No. of agents to kill is proportional to how less the average
         # strategy wealth is below the overall average wealth
         if average_wealth > strategy_average_wealth:
-            print('------LOSING----' + strategy['name'])
+            print('------LOSING----' + strategy)
             percentage_to_kill = (
                 average_wealth - strategy_average_wealth) / average_wealth
             num_agents_to_kill = math.ceil(
@@ -180,7 +149,7 @@ def naturalSelection(model):
         # No. of repliactions is proportional to how high the average strategy
         # wealth is above the overall average wealth
         if strategy_average_wealth > average_wealth:
-            print('------WINNING----' + strategy['name'])
+            print('------WINNING----' + strategy)
             percentage_to_replicate = (
                 strategy_average_wealth - average_wealth) / average_wealth
             num_agents_to_replicate = math.ceil(

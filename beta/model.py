@@ -54,66 +54,66 @@ all_wealth = []
 all_strategies = []
 all_hawks = []
 all_doves = []
-all_traderHawks = []
-all_traderDoves = []
+all_traders = []
+all_possessors = []
 
 n_hawks = []
 n_doves = []
-n_traderHawks = []
-n_traderDoves = []
+n_possessors = []
 n_traders = []
 n_nonTraders = []
-n_steps = int(CONFIG_MODEL['total_agents'])
+n_steps = int(CONFIG_MODEL['steps'])
+n_agents = int(CONFIG_MODEL['total_agents'])
 # EvolutionaryModel(N, width, height, step_cost, die_value, reproduce_value)
-model = EvolutionaryModel(n_steps, 10, 10, 2, 0, 10)
+model = EvolutionaryModel(n_agents, 10, 10, 2, 0, 10)
 
 
 for i in range(n_steps):
     model.step()
+# create statistics
     number_hawks = 0
     number_doves = 0
     number_traders = 0
     number_nonTraders = 0
-    number_TraderDoves = 0
-    number_TraderHawks = 0
+    number_trader = 0
+    number_possessor = 0
     for agent in model.schedule.agents:
-        if agent.strategy['name'] == "hawk":
+        if agent.strategy == "hawk":
             number_hawks += 1
-        elif agent.strategy['name'] == "dove":
+        elif agent.strategy == "dove":
             number_doves += 1
-        elif agent.strategy['name'] == "traderHawk":
-            number_TraderHawks += 1
+        elif agent.strategy == "trader":
+            number_trader += 1
         else:
-            number_TraderDoves += 1
+            number_possessor += 1
 
-        if agent.strategy['trader']:
+        if agent.strategy == 'trader':
             number_traders += 1
         else:
             number_nonTraders += 1
 
     n_doves.append(number_doves)
     n_hawks.append(number_hawks)
-    n_traderHawks.append(number_TraderHawks)
-    n_traderDoves.append(number_TraderDoves)
-    n_traders.append(number_traders)
+    n_traders.append(number_trader)
+    n_possessors.append(number_possessor)
     n_nonTraders.append(number_nonTraders)
 
 
 for agent in model.schedule.agents:
-    print("I'm a " + agent.strategy['name'] + " and I have " + str(agent.wealth) + "and I own" + str(agent.owner))
+    print("I'm a " + agent.strategy + " and I have " + str(agent.wealth) + "and I own" + str(agent.owner))
 
 # Store the results
 for agent in model.schedule.agents:
     all_wealth.append(agent.wealth)
-    all_strategies.append(agent.strategy['name'])
-    if agent.strategy['name'] == "hawk":
+    all_strategies.append(agent.strategy)
+    if agent.strategy == "hawk":
         all_hawks.append(agent.wealth)
-    elif agent.strategy['name'] == "dove":
+    elif agent.strategy == "dove":
         all_doves.append(agent.wealth)
-    elif agent.strategy['name'] == "traderHawk":
-        all_traderHawks.append(agent.wealth)
+    elif agent.strategy == "trader":
+        all_traders.append(agent.wealth)
     else:
-        all_traderDoves.append(agent.wealth)
+        all_possessors.append(agent.wealth)
 
 
 # shows a histogram of the total number of hawks and doves
@@ -122,15 +122,15 @@ plt.title("Total number of each remaining strategy")
 plt.show()
 
 # shows a histogram of the wealth of hawks and doves
-plt.hist((all_hawks, all_doves, all_traderHawks, all_traderDoves), label=('Hawks', 'Doves', 'Trader Hawks', 'Trader Doves'))
+plt.hist((all_hawks, all_doves, all_traders, all_possessors), label=('Hawks', 'Doves', 'Traders', 'Possessors'))
 plt.title("Histogram of the wealth each strategy")
 plt.legend()
 plt.show()
 
 plt.plot(n_hawks, label=('Hawks'))
 plt.plot(n_doves, label=('Doves'))
-plt.plot(n_traderHawks, label=('Trader Hawks'))
-plt.plot(n_traderDoves, label=('Trader Doves'))
+plt.plot(n_traders, label=('Traders'))
+plt.plot(n_possessors, label=('Possessors'))
 plt.title("Plot of number of hawks and doves at each step")
 plt.legend()
 plt.show()
