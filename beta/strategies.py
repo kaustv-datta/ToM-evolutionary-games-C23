@@ -32,7 +32,6 @@ def emulateHawkDoveStrategy(hawk, dove):
 # Hawk-Hawk
 def emulateHawkHawkStrategy(hawkO, hawkNO):
     owner = hawkO.owner
-
     h = getFightCost(owner)
     # if wealth/2 > h its the prisoners dilemma, otherwise its the chicken game
     # one of both will win/be the Hawk while the other looses/be the dove
@@ -77,7 +76,7 @@ def emulateDoveDoveStrategy(doveO, doveNO):
     looser.saySomething('I am dove ' + str(looser.unique_id) + ". I retreated")
 
 # Traders
-def emulateTraders(owner, intruder):
+def emulateTradersStrategy(owner, intruder):
     # intruder values the property V = 0.8 * intruder.wealth
     # owner values the property v = owner.owner
     # owner sells the property for x = (V + v) / 2

@@ -28,7 +28,7 @@ class EvolutionaryModel(Model):
             initialWealth = random.randrange(1, 16, 1)
             # 50 % are owners
             owner = 0
-            if random.randrange(1, 11, 1) <= 5:
+            if random.randrange(1, 101, 1) <= int(CONFIG_MODEL['percentage_of_owners']):
                 owner = round(0.8 * initialWealth)
                 initialWealth = round(0.2 * initialWealth)
             a = EvolutionaryAgent(i, self, evolutionaryStrategy, initialWealth, owner)
@@ -87,9 +87,7 @@ for i in range(n_steps):
         else:
             number_possessor += 1
 
-        if agent.strategy == 'trader':
-            number_traders += 1
-        else:
+        if agent.strategy != 'trader':
             number_nonTraders += 1
 
     n_doves.append(number_doves)

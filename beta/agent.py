@@ -40,7 +40,7 @@ class EvolutionaryAgent(Agent):
         # The intruder values the property as v = 0.9 of its own wealth
         # Agents will trade if both are traders and if the intruder values the property more then the owner
         if owner.strategy == 'trader' and intruder.strategy == 'trader' and owner.owner < round(0.8 * intruder.wealth):
-            strategies.emulateTraders(owner, intruder)
+            strategies.emulateTradersStrategy(owner, intruder)
         if owner.strategy == 'hawk' or owner.strategy == 'possessor' or owner.strategy == 'trader':
             if intruder.strategy == 'hawk':
                 strategies.emulateHawkHawkStrategy(owner, intruder)
