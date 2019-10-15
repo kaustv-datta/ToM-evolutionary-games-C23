@@ -10,6 +10,11 @@ class EvolutionaryAgent(Agent):
         self.wealth = wealth
         self.strategy = initialStrategy
         self.owner = owner
+
+    # Update agent wealth and property owned
+    def updateAgentResource(self, wealth, owner):
+        self.wealth = wealth
+        self.owner = owner
         
     # Move to a random surrounding tile
     def move(self):

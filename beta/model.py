@@ -9,9 +9,16 @@ import matplotlib.pyplot as plt
 import configparser
 import io
 
+# Load the configuration file
+CONFIG = configparser.ConfigParser()
+CONFIG.read("./config/config.ini")
+CONFIG_MODEL = CONFIG['model']
+
+
 # Main model which controls the agents
 class EvolutionaryModel(Model):
     """A model with some number of agents."""
+
     def __init__(self, N, width, height, step_cost, die_value, reproduce_value):
         self.num_agents = N
         self.grid = MultiGrid(width, height, True)
@@ -24,14 +31,11 @@ class EvolutionaryModel(Model):
         # Create agents
         for i in range(self.num_agents):
             evolutionaryStrategy = random.choice(strategies.strategyList)
-            # Initial Wealth is set to a random number between 1 and 15
-            initialWealth = random.randrange(1, 16, 1)
-            # 50 % are owners
-            owner = 0
-            if random.randrange(1, 101, 1) <= int(CONFIG_MODEL['percentage_of_owners']):
-                owner = round(0.8 * initialWealth)
-                initialWealth = round(0.2 * initialWealth)
-            a = EvolutionaryAgent(i, self, evolutionaryStrategy, initialWealth, owner)
+            # Initial Wealth is set to a random number from config file
+            initialWealth = random.randrange(int(CONFIG_MODEL['initial_wealth_range_lower']), int(
+                CONFIG_MODEL['initial_wealth_range_upper']))
+            a = EvolutionaryAgent(
+                i, self, evolutionaryStrategy, initialWealth, 0)
             self.schedule.add(a)
 
             # Add the agent to a random grid cell
@@ -39,16 +43,21 @@ class EvolutionaryModel(Model):
             y = self.random.randrange(self.grid.height)
             self.grid.place_agent(a, (x, y))
 
+        # Make percentage of agents property owners
+        num_owners = round(
+            (int(CONFIG_MODEL['percentage_of_owners']) / 100) * len(self.schedule.agents))
+        owner_agents = random.sample(self.schedule.agents, num_owners)
+        for agent in owner_agents:
+            current_wealth = agent.wealth
+            updated_wealth = round(0.2 * current_wealth)
+            updated_owner = round(0.8 * current_wealth)
+            agent.updateAgentResource(updated_wealth, updated_owner)
+
     def step(self):
         self.schedule.step()
         # Natural selection
         strategies.naturalSelection(self)
 
-
-# Load the configuration file
-CONFIG = configparser.ConfigParser()
-CONFIG.read("./config/config.ini")
-CONFIG_MODEL = CONFIG['model']
 
 all_wealth = []
 all_strategies = []
@@ -98,7 +107,8 @@ for i in range(n_steps):
 
 
 for agent in model.schedule.agents:
-    print("I'm a " + agent.strategy + " and I have " + str(agent.wealth) + "and I own" + str(agent.owner))
+    print("I'm a " + agent.strategy + " and I have " +
+          str(agent.wealth) + "and I own" + str(agent.owner))
 
 # Store the results
 for agent in model.schedule.agents:
@@ -120,7 +130,8 @@ plt.title("Total number of each remaining strategy")
 plt.show()
 
 # shows a histogram of the wealth of hawks and doves
-plt.hist((all_hawks, all_doves, all_traders, all_possessors), label=('Hawks', 'Doves', 'Traders', 'Possessors'))
+plt.hist((all_hawks, all_doves, all_traders, all_possessors),
+         label=('Hawks', 'Doves', 'Traders', 'Possessors'))
 plt.title("Histogram of the wealth each strategy")
 plt.legend()
 plt.show()

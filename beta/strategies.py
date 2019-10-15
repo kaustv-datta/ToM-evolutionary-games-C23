@@ -120,7 +120,6 @@ def naturalSelection(model):
         # No. of agents to kill is proportional to how less the average
         # strategy wealth is below the overall average wealth
         if average_wealth > strategy_average_wealth:
-            print('------LOSING----' + strategy)
             percentage_to_kill = (
                 average_wealth - strategy_average_wealth) / average_wealth
             num_agents_to_kill = math.ceil(
@@ -148,7 +147,6 @@ def naturalSelection(model):
         # No. of repliactions is proportional to how high the average strategy
         # wealth is above the overall average wealth
         if strategy_average_wealth > average_wealth:
-            print('------WINNING----' + strategy)
             percentage_to_replicate = (
                 strategy_average_wealth - average_wealth) / average_wealth
             num_agents_to_replicate = math.ceil(
