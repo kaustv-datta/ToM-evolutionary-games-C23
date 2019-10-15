@@ -11,12 +11,12 @@ CONFIG.read('./config/config.ini')
 CONFIG_MODEL = CONFIG['model']
 
 # List of available strategies
-strategyList = ['hawk', 'dove', 'possessor', 'trader']
-
+strategyList = CONFIG_MODEL['active_strategies'].split(',')
 
 
 # Type of game
 ACTIVE_GAME_TYPE = CONFIG_MODEL['game_type']
+
 
 # Hawk-Dove OR Dove-Hawk
 def emulateHawkDoveStrategy(hawk, dove):
@@ -76,6 +76,8 @@ def emulateDoveDoveStrategy(doveO, doveNO):
     looser.saySomething('I am dove ' + str(looser.unique_id) + ". I retreated")
 
 # Traders
+
+
 def emulateTradersStrategy(owner, intruder):
     # intruder values the property V = 0.8 * intruder.wealth
     # owner values the property v = owner.owner
@@ -86,7 +88,6 @@ def emulateTradersStrategy(owner, intruder):
     intruder.owner = x
     intruder.wealth -= x
     owner.saySomething('We are trading')
-
 
 
 # Get cost of interaction or fight
