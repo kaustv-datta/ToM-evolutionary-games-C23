@@ -52,6 +52,50 @@ class EvolutionaryAgent(Agent):
             else:
                 strategies.emulateDoveDoveStrategy(owner, intruder)
 
+        # if owner.strategy == 'dove':
+        #     # check if intruder is dove/hawk/possessor/trader
+        #     if intruder.strategy == 'dove':
+        #         # dove-dove
+        #     elif intruder.strategy == 'hawk':
+        #         # dove-hawk
+        #     elif intruder.strategy == 'possessor':
+        #         # dove-possessor
+        #     elif intruder.strategy == 'trader':
+        #         # dove-trader
+
+        # elif owner.strategy == 'hawk':
+        #     # check if intruder is dove/hawk/possessor/trader
+        #     if intruder.strategy == 'dove':
+        #         # hawk-dove
+        #     elif intruder.strategy == 'hawk':
+        #         # hawk-hawk
+        #     elif intruder.strategy == 'possessor':
+        #         # hawk-possessor
+        #     elif intruder.strategy == 'trader':
+        #         # hawk-trader
+
+        # elif owner.strategy == 'possessor':
+        #     # check if intruder is dove/hawk/possessor/trader
+        #     if intruder.strategy == 'dove':
+        #         # possessor-dove
+        #     elif intruder.strategy == 'hawk':
+        #         # possessor-hawk
+        #     elif intruder.strategy == 'possessor':
+        #         # possessor-possessor
+        #     elif intruder.strategy == 'trader':
+        #         # possessor-trader
+            
+        # elif owner.strategy == 'trader':
+        #     # check if intruder is dove/hawk/possessor/trader
+        #     if intruder.strategy == 'dove':
+        #         # trader-dove
+        #     elif intruder.strategy == 'hawk':
+        #         # trader-hawk
+        #     elif intruder.strategy == 'possessor':
+        #         # trader-possessor
+        #     elif intruder.strategy == 'trader':
+        #         # trader-trader
+
             
     def saySomething(self, something):
         print(something)
