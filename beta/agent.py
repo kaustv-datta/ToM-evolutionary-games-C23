@@ -93,19 +93,20 @@ class EvolutionaryAgent(Agent):
         elif owner.strategy == 'trader':
             # check if intruder is dove/hawk/possessor/trader
             if intruder.strategy == 'dove':
-                # trader-dove
+                # trader-dove == possessor - dove == hawk-dove
                 strategies.emulateHawkDoveStrategy(owner, intruder)
             elif intruder.strategy == 'hawk':
-                # trader-hawk
+                # trader-hawk == possessor-dove == hawk-hawk
                 strategies.emulateHawkHawkStrategy(owner, intruder)
             elif intruder.strategy == 'possessor':
-                # trader-possessor
+                # trader-possessor == possessor-possessor == hawk-dove
                 strategies.emulateHawkDoveStrategy(owner, intruder)
             elif intruder.strategy == 'trader':
                 if owner.owner < round(0.8 * intruder.wealth):
                     # trader-trader
                     strategies.emulateTradersStrategy(owner, intruder)
                 else:
+                    # trader-possessor == possessor-possessor == hawk-dove
                     strategies.emulateHawkDoveStrategy(owner, intruder)
 
 
