@@ -117,19 +117,16 @@ def naturalSelection(model):
             agent.wealth + agent.owner for agent in strategy_specific_agents]
         strategy_average_wealth = statistics.mean(strategy_specific_wealth)
 
-        # If this is a loosing strategy - kill some agents using this strategy
+        # If this is a loosing strategy - kill weakest agents using this strategy
         # No. of agents to kill is proportional to how less the average
         # strategy wealth is below the overall average wealth
         if average_wealth > strategy_average_wealth:
             percentage_to_kill = (
                 average_wealth - strategy_average_wealth) / average_wealth
-            num_agents_to_kill = math.ceil(
+            num_agents_to_kill = math.floor(
                 percentage_to_kill * len(strategy_specific_agents))
-            if len(strategy_specific_agents) <= num_agents_to_kill:
-                agents_to_kill = strategy_specific_agents
-            else:
-                agents_to_kill = random.sample(
-                    strategy_specific_agents, num_agents_to_kill)
+            agents_to_kill = sorted(strategy_specific_agents, key=lambda agent: agent.wealth + agent.owner)[
+                :num_agents_to_kill]
             for agent in agents_to_kill:
                 agent.die()
 
@@ -150,12 +147,9 @@ def naturalSelection(model):
         if strategy_average_wealth > average_wealth:
             percentage_to_replicate = (
                 strategy_average_wealth - average_wealth) / average_wealth
-            num_agents_to_replicate = math.ceil(
+            num_agents_to_replicate = math.floor(
                 percentage_to_replicate * len(strategy_specific_agents))
-            if len(strategy_specific_agents) <= num_agents_to_replicate:
-                agents_to_replicate = strategy_specific_agents
-            else:
-                agents_to_replicate = random.sample(
-                    strategy_specific_agents, num_agents_to_replicate)
+            agents_to_replicate = random.sample(
+                strategy_specific_agents, num_agents_to_replicate)
             for agent in agents_to_replicate:
                 agent.reproduce()
