@@ -8,6 +8,7 @@ import random
 import matplotlib.pyplot as plt
 import configparser
 import io
+import math
 
 # Load the configuration file
 CONFIG = configparser.ConfigParser()
@@ -28,20 +29,26 @@ class EvolutionaryModel(Model):
         self.schedule = RandomActivation(self)
         self.latest_id = N-1
 
-        # Create agents
-        for i in range(self.num_agents):
-            evolutionaryStrategy = random.choice(strategies.strategyList)
-            # Initial Wealth is set to a random number from config file
-            initialWealth = random.randrange(int(CONFIG_MODEL['initial_wealth_range_lower']), int(
-                CONFIG_MODEL['initial_wealth_range_upper']))
-            a = EvolutionaryAgent(
-                i, self, evolutionaryStrategy, initialWealth, 0)
-            self.schedule.add(a)
+        # Create agents based on population percentage from config file
+        AGENT_ID = 0
+        for strategy in strategies.strategyList:
+            percent_agent = float(CONFIG_MODEL[strategy + '_population_percent'])
+            num_strategy_agents = math.floor(percent_agent * self.num_agents)
 
-            # Add the agent to a random grid cell
-            x = self.random.randrange(self.grid.width)
-            y = self.random.randrange(self.grid.height)
-            self.grid.place_agent(a, (x, y))
+            for i in range(num_strategy_agents):
+                evolutionaryStrategy = strategy
+                # Initial Wealth is set to a random number from config file
+                initialWealth = random.randrange(int(CONFIG_MODEL['initial_wealth_range_lower']), int(
+                    CONFIG_MODEL['initial_wealth_range_upper']))
+                a = EvolutionaryAgent(
+                    AGENT_ID, self, evolutionaryStrategy, initialWealth, 0)
+                self.schedule.add(a)
+                AGENT_ID += 1
+
+                # Add the agent to a random grid cell
+                x = self.random.randrange(self.grid.width)
+                y = self.random.randrange(self.grid.height)
+                self.grid.place_agent(a, (x, y))
 
         # Make percentage of agents property owners
         num_owners = round(
