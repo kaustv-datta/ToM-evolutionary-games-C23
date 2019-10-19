@@ -42,64 +42,72 @@ class EvolutionaryAgent(Agent):
             self.chooseOwnerIntruderInteraction(other, self)
 
     def chooseOwnerIntruderInteraction(self, owner, intruder):
-        # The intruder values the property as v = 0.9 of its own wealth
+        # The intruder values the property as v = 0.8 of its own wealth
         # Agents will trade if both are traders and if the intruder values the property more then the owner
-        if owner.strategy == 'trader' and intruder.strategy == 'trader' and owner.owner < round(0.8 * intruder.wealth):
-            strategies.emulateTradersStrategy(owner, intruder)
-        if owner.strategy == 'hawk' or owner.strategy == 'possessor' or owner.strategy == 'trader':
-            if intruder.strategy == 'hawk':
-                strategies.emulateHawkHawkStrategy(owner, intruder)
-            else:
-                strategies.emulateHawkDoveStrategy(owner, intruder)
-        else:
-            if intruder.strategy == 'hawk':
-                strategies.emulateHawkDoveStrategy(owner, intruder)
-            else:
+
+        if owner.strategy == 'dove':
+            # check if intruder is dove/hawk/possessor/trader
+            if intruder.strategy == 'dove':
+                # dove-dove
+                strategies.emulateDoveDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'hawk':
+                # dove-hawk
+                strategies.emulateHawkDoveStrategy(intruder, owner)
+            elif intruder.strategy == 'possessor':
+                # dove-possessor == dove-dove
+                strategies.emulateDoveDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'trader':
+                # dove-trader
                 strategies.emulateDoveDoveStrategy(owner, intruder)
 
-        # if owner.strategy == 'dove':
-        #     # check if intruder is dove/hawk/possessor/trader
-        #     if intruder.strategy == 'dove':
-        #         # dove-dove
-        #     elif intruder.strategy == 'hawk':
-        #         # dove-hawk
-        #     elif intruder.strategy == 'possessor':
-        #         # dove-possessor
-        #     elif intruder.strategy == 'trader':
-        #         # dove-trader
+        elif owner.strategy == 'hawk':
+            # check if intruder is dove/hawk/possessor/trader
+            if intruder.strategy == 'dove':
+                # hawk-dove
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'hawk':
+                # hawk-hawk
+                strategies.emulateHawkHawkStrategy(owner, intruder)
+            elif intruder.strategy == 'possessor':
+                # hawk-possessor == hawk-dove
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'trader':
+                # hawk-traderm == hawk-possessor == hawk-dove
+                strategies.emulateHawkDoveStrategy(owner, intruder)
 
-        # elif owner.strategy == 'hawk':
-        #     # check if intruder is dove/hawk/possessor/trader
-        #     if intruder.strategy == 'dove':
-        #         # hawk-dove
-        #     elif intruder.strategy == 'hawk':
-        #         # hawk-hawk
-        #     elif intruder.strategy == 'possessor':
-        #         # hawk-possessor
-        #     elif intruder.strategy == 'trader':
-        #         # hawk-trader
-
-        # elif owner.strategy == 'possessor':
-        #     # check if intruder is dove/hawk/possessor/trader
-        #     if intruder.strategy == 'dove':
-        #         # possessor-dove
-        #     elif intruder.strategy == 'hawk':
-        #         # possessor-hawk
-        #     elif intruder.strategy == 'possessor':
-        #         # possessor-possessor
-        #     elif intruder.strategy == 'trader':
-        #         # possessor-trader
+        elif owner.strategy == 'possessor':
+            # check if intruder is dove/hawk/possessor/trader
+            if intruder.strategy == 'dove':
+                # possessor-dove
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'hawk':
+                # possessor-hawk
+                strategies.emulateHawkHawkStrategy(owner, intruder)
+            elif intruder.strategy == 'possessor':
+                # possessor-possessor
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'trader':
+                # possessor-trader
+                strategies.emulateHawkDoveStrategy(owner, intruder)
             
-        # elif owner.strategy == 'trader':
-        #     # check if intruder is dove/hawk/possessor/trader
-        #     if intruder.strategy == 'dove':
-        #         # trader-dove
-        #     elif intruder.strategy == 'hawk':
-        #         # trader-hawk
-        #     elif intruder.strategy == 'possessor':
-        #         # trader-possessor
-        #     elif intruder.strategy == 'trader':
-        #         # trader-trader
+        elif owner.strategy == 'trader':
+            # check if intruder is dove/hawk/possessor/trader
+            if intruder.strategy == 'dove':
+                # trader-dove
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'hawk':
+                # trader-hawk
+                strategies.emulateHawkHawkStrategy(owner, intruder)
+            elif intruder.strategy == 'possessor':
+                # trader-possessor
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'trader':
+                if owner.owner < round(0.8 * intruder.wealth):
+                    # trader-trader
+                    strategies.emulateTradersStrategy(owner, intruder)
+                else:
+                    strategies.emulateHawkDoveStrategy(owner, intruder)
+
 
             
     def saySomething(self, something):
