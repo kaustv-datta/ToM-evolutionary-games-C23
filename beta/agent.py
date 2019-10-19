@@ -1,6 +1,16 @@
 from mesa import Agent
 import strategies
 import random
+import configparser
+
+# Load the configuration file
+CONFIG = configparser.ConfigParser()
+CONFIG.read('./config/config.ini')
+CONFIG_MODEL = CONFIG['model']
+WEALTH_TYPE = CONFIG_MODEL['initial_wealth_type']
+FIXED_WEALTH_VALUE = int(CONFIG_MODEL['fixed_wealth_value'])
+PROPERTY_INFLATION_PRICE = float(CONFIG_MODEL['property_buy_price_percentage'])
+FIXED_PROPERTY_VALUE = int(CONFIG_MODEL['fixed_property_value'])
 
 # An evolutionary agent
 class EvolutionaryAgent(Agent):
@@ -102,30 +112,45 @@ class EvolutionaryAgent(Agent):
                 # trader-possessor
                 strategies.emulateHawkDoveStrategy(owner, intruder)
             elif intruder.strategy == 'trader':
-                if owner.owner < round(0.8 * intruder.wealth):
-                    # trader-trader
+                # trader-trader
+                estimated_buying_price = owner.owner + (PROPERTY_INFLATION_PRICE * owner.owner)
+                if estimated_buying_price < intruder.wealth:
                     strategies.emulateTradersStrategy(owner, intruder)
-                else:
-                    strategies.emulateHawkDoveStrategy(owner, intruder)
+                # if owner.owner < round(0.8 * intruder.wealth):
+                #     strategies.emulateTradersStrategy(owner, intruder)
+                # else:
+                #     strategies.emulateHawkDoveStrategy(owner, intruder)
 
 
             
     def saySomething(self, something):
-        print(something)
+        if 1==0:
+            print(something)
 
     def reproduce(self):
         # generate agent with same strategy as parent
         # print('I am a ' + self.strategy + str(self.unique_id) + ' and I am reproducing')
         new_unique_id = self.model.latest_id + 1
         self.model.latest_id += 1
-        # Initial Wealth is set to a random number between 1 and 16
-        initialWealth = random.randrange(1, 16, 1)
+        
+        # Initial Wealth is set from config - to a random number OR fixed amount
+        if WEALTH_TYPE == 'fixed':
+            initialWealth = FIXED_WEALTH_VALUE
+        else:
+            initialWealth = random.randrange(int(CONFIG_MODEL['initial_wealth_range_lower']), int(
+            CONFIG_MODEL['initial_wealth_range_upper']))
+        
         # a newborn has a probability to own a property of 50 %
         owner = 0
         if random.randrange(1, 11, 1) <= 5:
-            owner = round(0.8 * initialWealth)
-            initialWealth = round(0.2 * initialWealth)
+            if WEALTH_TYPE == 'fixed':
+                owner = FIXED_PROPERTY_VALUE
+            else:
+                initialWealth = round(0.2 * initialWealth)
+                owner = round(0.8 * initialWealth)
+        
         a = EvolutionaryAgent(new_unique_id, self.model, self.strategy, initialWealth, owner)
+        
         # the reproduced agent will stay on the same position as the parent
         self.model.grid.place_agent(a, self.pos)
         self.model.schedule.add(a)
