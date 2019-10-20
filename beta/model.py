@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import configparser
 import io
 import math
+import os
 
 # Load the configuration file
 CONFIG = configparser.ConfigParser()
@@ -95,7 +96,10 @@ n_agents = int(CONFIG_MODEL['total_agents'])
 
 # Repeat entire simluation based on config file
 num_simulations = int(CONFIG_RESULTS['total_runs'])
-output_folder = CONFIG_RESULTS['output_folder']
+working_directory = os.getcwd()
+output_folder = os.path.join(working_directory, CONFIG_RESULTS['output_folder'])
+if not os.path.exists(output_folder):
+    os.mkdir(output_folder)
 
 for sim_run in range(num_simulations):
     # EvolutionaryModel(N, width, height, step_cost, die_value, reproduce_value)
@@ -152,7 +156,7 @@ for sim_run in range(num_simulations):
     plt.hist((all_strategies))
     plt.title("Total number of each remaining strategy")
     # plt.show()
-    plt.savefig(output_folder + 'run_' + str(sim_run) + '_plot1.png')
+    plt.savefig(os.path.join(output_folder, 'run_' + str(sim_run) + '_plot1.png'))
     plt.close()
 
     # shows a histogram of the wealth of hawks and doves
@@ -161,7 +165,7 @@ for sim_run in range(num_simulations):
     plt.title("Histogram of the wealth each strategy")
     plt.legend()
     # plt.show()
-    plt.savefig(output_folder + 'run_' + str(sim_run) + '_plot2.png')
+    plt.savefig(os.path.join(output_folder,  'run_' + str(sim_run) + '_plot2.png'))
     plt.close()
 
     plt.plot(n_hawks, label=('Hawks'))
@@ -171,7 +175,7 @@ for sim_run in range(num_simulations):
     plt.title("Plot of number of hawks and doves at each step")
     plt.legend()
     # plt.show()
-    plt.savefig(output_folder + 'run_' + str(sim_run) + '_plot3.png')
+    plt.savefig(os.path.join(output_folder,  'run_' + str(sim_run) + '_plot3.png'))
     plt.close()
 
     plt.plot(n_traders, label=('Traders'))
@@ -179,5 +183,5 @@ for sim_run in range(num_simulations):
     plt.title("Plot of number of traders and non-traders at each step")
     plt.legend()
     # plt.show()
-    plt.savefig(output_folder + 'run_' + str(sim_run) + '_plot4.png')
+    plt.savefig(os.path.join(output_folder,  'run_' + str(sim_run) + '_plot4.png'))
     plt.close()
