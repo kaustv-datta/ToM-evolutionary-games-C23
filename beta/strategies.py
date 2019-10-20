@@ -33,40 +33,35 @@ def emulateHawkDoveStrategy(hawk, dove):
 # Hawk-Hawk
 def emulateHawkHawkStrategy(hawkO, hawkNO):
     owner = hawkO.owner
-    owner_wealth = hawkO.wealth
     h = getFightCost(owner)
 
-    if h > owner_wealth:
-        # Owner gives up if it can die and acts like a dove
-        emulateHawkDoveStrategy(hawkNO, hawkO)
+    # if wealth/2 > h its the prisoners dilemma, otherwise its the chicken game
+    # one of both will win/be the Hawk while the other looses/be the dove
+    player = [hawkO, hawkNO]
+    winner = random.choice(player)
+    player.remove(winner)
+    looser = player[0]
+    if owner / 2 > h:
+        # prisoners dilemma:  both keep the hawk strategy, one will gain (V-h),
+        # the other will (loose -h)
+        winner.wealth -= h
+        winner.owner = owner
+        looser.wealth -= h
+        looser.owner = 0
     else:
-        # if wealth/2 > h its the prisoners dilemma, otherwise its the chicken game
-        # one of both will win/be the Hawk while the other looses/be the dove
-        player = [hawkO, hawkNO]
-        winner = random.choice(player)
-        player.remove(winner)
-        looser = player[0]
-        if owner / 2 > h:
-            # prisoners dilemma:  both keep the hawk strategy, one will gain (V-h),
-            # the other will (loose -h)
-            winner.wealth -= h
-            winner.owner = owner
-            looser.wealth -= h
-            looser.owner = 0
-        else:
-            # chicken game: one chooses Hawk (winner) and the other one Dove
-            # (looser)
-            winner.saySomething("We will play the Chicken Game. I am Hawk " +
-                                str(winner.unique_id) +
-                                " and I fight, while Hawk " +
-                                str(looser.unique_id) +
-                                " behaves as a dove")
-            emulateHawkDoveStrategy(winner, looser)
-        # Die if wealth is negative
-        if looser.wealth < 0:
-            looser.die()
-        if winner.wealth < 0:
-            winner.die()
+        # chicken game: one chooses Hawk (winner) and the other one Dove
+        # (looser)
+        winner.saySomething("We will play the Chicken Game. I am Hawk " +
+                            str(winner.unique_id) +
+                            " and I fight, while Hawk " +
+                            str(looser.unique_id) +
+                            " behaves as a dove")
+        emulateHawkDoveStrategy(winner, looser)
+    # Die if wealth is negative
+    if looser.wealth < 0:
+        looser.die()
+    if winner.wealth < 0:
+        winner.die()
 
 
 # Dove-Dove
@@ -95,7 +90,7 @@ def emulateTradersStrategy(owner, intruder):
     # owner sells the property for x = (V + v) / 2
     # x = round((0.8 * intruder.wealth + owner.owner) / 2)
     estimated_buying_price = owner.owner + (PROPERTY_INFLATION_PRICE * owner.owner)
-    x = round((estimated_buying_price - owner.owner) / 2)
+    x = owner.owner + round((estimated_buying_price - owner.owner) / 2)
     owner.owner = 0
     owner.wealth += x
     intruder.owner = x
