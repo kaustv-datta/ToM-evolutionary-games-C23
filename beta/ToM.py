@@ -23,9 +23,10 @@ class Beliefs0:
 		self.b[context, delta] += 1
 
 
-def V(OSeller, OBuyer, i = -1):
+def V(OSeller, OBuyer):
 
 	n = max(np.size(OSeller), np.size(OBuyer))
+	i = -1 if np.size(OSeller)>1 else 1
 
 	v = i*OBuyer*np.ones(n)
 	v[OSeller > OBuyer] = PENALTY
