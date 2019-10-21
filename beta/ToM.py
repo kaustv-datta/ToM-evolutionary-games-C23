@@ -1,5 +1,7 @@
 import numpy as np
 
+PENALTY = -4
+
 class Beliefs0:
 
 	def __init__(self, n_deltas, n_contexts):
@@ -19,4 +21,14 @@ class Beliefs0:
 
 	def observe(self, context, delta):
 		self.b[context, delta] += 1
+
+
+def V(OSeller, OBuyer, i = -1):
+
+	n = max(np.size(OSeller), np.size(OBuyer))
+
+	v = i*OBuyer*np.ones(n)
+	v[OSeller > OBuyer] = PENALTY
+
+	return v
 
