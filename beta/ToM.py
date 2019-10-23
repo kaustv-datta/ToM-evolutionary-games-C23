@@ -71,9 +71,14 @@ class ToMAgent:
 			context = int(context/self.n_contexts)
 
 			# Compute next offers for agents
-			opponent_new = opponent(my_offer, opponent_offer, context)
-			my_new = self(my_offer, opponent_offer, context)
+			opponent_new, deltaOpponent = opponent(my_offer, opponent_offer, context)
+			my_new, deltaMe = self(my_offer, opponent_offer, context)
 
+			# Learn
+			opponent.learn(deltaMe, deltaOpponent, context)
+			self.learn(deltaMe, deltaOpponent, context)
+
+			# Update offer values
 			opponent_offer = opponent_new
 			my_offer = my_new
 
@@ -99,7 +104,14 @@ class ToM0(ToMAgent):
 		# Compute optimal action (the index of the delta to use)
 		action = np.argmax(U(v, p))
 		# Return offer with respect to optimal action
-		return (offerSeller if self.direction else offerBuyer) + self.__possibleDeltas[action]
+		return (offerSeller if self.direction else offerBuyer) + self.__possibleDeltas[action], action
+
+	def learn(self, deltaSeller, deltaBuyer, context):
+
+		if self.direction:
+			self.beliefs.observe(deltaBuyer, context)
+		else:
+			self.beliefs.observe(deltaSeller, context)
 
 
 class ToM1(ToMAgent):
@@ -121,5 +133,9 @@ class ToM1(ToMAgent):
 		# Compute optimal action (the index of the delta to use)
 		action = np.argmax(v)
 		# Return offer with respect to optimal action
-		return (offerSeller if self.direction else offerBuyer) + self.__possibleDeltas[action]
+		return (offerSeller if self.direction else offerBuyer) + self.__possibleDeltas[action], action
+
+	def learn(self, deltaSeller, deltaBuyer, context):
+
+		self.model.learn(deltaSeller, deltaBuyer, context)
 
