@@ -45,7 +45,6 @@ class ToMAgent:
 
 		self.direction = direction
 		self.computeContext = context
-		self.beliefs = Beliefs0(n_deltas, n_contexts)
 
 		self.possibleDeltas = np.arange(0, 1 + 1/n_deltas, n_deltas)
 		self.n_contexts = n_contexts
@@ -83,6 +82,11 @@ class ToMAgent:
 class ToM0(ToMAgent):
 	# 0-order ToM agent
 
+	def __init__(self, n_deltas, n_contexts, directon, context = lambda offerSeller, offerBuyer : offerSeller - offerBuyer):
+
+		super(self, ToM0).__init__(n_deltas, n_contexts, direction, context)
+		self.beliefs = Beliefs0(n_deltas, n_contexts)
+
 	def __call__(self, offerSeller, offerBuyer, context):
 
 
@@ -97,4 +101,25 @@ class ToM0(ToMAgent):
 		# Return offer with respect to optimal action
 		return (offerSeller if self.direction else offerBuyer) + self.__possibleDeltas[action]
 
+
+class ToM1(ToMAgent):
+	# 1-order ToM agent
+
+	def __init__(self, n_deltas, n_contexts, directon, context = lambda offerSeller, offerBuyer : offerSeller - offerBuyer):
+
+		super(self, ToM0).__init__(n_deltas, n_contexts, direction, context)
+		self.model = ToM1(n_deltas, n_contexts, -1*direction, None)
+
+	def __call__(self, offerSeller, offerBuyer, context):
+
+		# Predict action of opponent
+		opponent_action = self.model(offerSeller, offerBuyer, context)
+
+		# Compute values for each of your actions
+		v = V(self.__possibleDeltas+offerSeller, self.__possibleDeltas+offerBuyer, self.direction)
+
+		# Compute optimal action (the index of the delta to use)
+		action = np.argmax(v)
+		# Return offer with respect to optimal action
+		return (offerSeller if self.direction else offerBuyer) + self.__possibleDeltas[action]
 
