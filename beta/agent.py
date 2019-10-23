@@ -1,6 +1,16 @@
 from mesa import Agent
 import strategies
 import random
+import configparser
+
+# Load the configuration file
+CONFIG = configparser.ConfigParser()
+CONFIG.read('./config/config.ini')
+CONFIG_MODEL = CONFIG['model']
+WEALTH_TYPE = CONFIG_MODEL['initial_wealth_type']
+FIXED_WEALTH_VALUE = int(CONFIG_MODEL['fixed_wealth_value'])
+PROPERTY_INFLATION_PRICE = float(CONFIG_MODEL['property_buy_price_percentage'])
+FIXED_PROPERTY_VALUE = int(CONFIG_MODEL['fixed_property_value'])
 
 # An evolutionary agent
 class EvolutionaryAgent(Agent):
@@ -9,6 +19,11 @@ class EvolutionaryAgent(Agent):
         super().__init__(unique_id, model)
         self.wealth = wealth
         self.strategy = initialStrategy
+        self.owner = owner
+
+    # Update agent wealth and property owned
+    def updateAgentResource(self, wealth, owner):
+        self.wealth = wealth
         self.owner = owner
         
     # Move to a random surrounding tile
@@ -35,49 +50,107 @@ class EvolutionaryAgent(Agent):
             self.chooseOwnerIntruderInteraction(self, other)
         elif self.owner == 0 and other.owner > 0:
             self.chooseOwnerIntruderInteraction(other, self)
-        else:
-            self.chooseWealthInteraction(other)
 
     def chooseOwnerIntruderInteraction(self, owner, intruder):
-        # The intruder values the property as v = 0.9 of its own wealth
+        # The intruder values the property as v = 0.8 of its own wealth
         # Agents will trade if both are traders and if the intruder values the property more then the owner
-        if owner.strategy['trader'] and intruder.strategy['trader'] and owner.owner < round(0.8 * intruder.wealth):
-            strategies.emulateTraders(owner, intruder)
-        elif intruder.strategy['nonTradeStrategy'] == 'dove':
-            strategies.emulatePossessorDove(owner, intruder)
-        else:
-            strategies.emulatePossessorHawk(owner, intruder)
 
-    def chooseWealthInteraction(self, other):
-        # Fight for wealth, which is a random number between 1 an 15
-        wealth = random.randrange(1, 16, 1)
-        if self.strategy['nonTradeStrategy'] == 'hawk':
-            if other.strategy['nonTradeStrategy'] == 'dove':
-                strategies.emulateHawkDoveStrategy(self, other, wealth)
-            else:
-                strategies.emulateHawkHawkStrategy(self, other, wealth)
-        else:
-            if other.strategy['nonTradeStrategy'] == 'dove':
-                strategies.emulateDoveDoveStrategy(self, other, wealth)
-            else:
-                strategies.emulateHawkDoveStrategy(other, self, wealth)
+        if owner.strategy == 'dove':
+            # check if intruder is dove/hawk/possessor/trader
+            if intruder.strategy == 'dove':
+                # dove-dove
+                strategies.emulateDoveDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'hawk':
+                # dove-hawk
+                strategies.emulateHawkDoveStrategy(intruder, owner)
+            elif intruder.strategy == 'possessor':
+                # dove-possessor == dove-dove
+                strategies.emulateDoveDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'trader':
+                # dove-trader
+                strategies.emulateDoveDoveStrategy(owner, intruder)
+
+        elif owner.strategy == 'hawk':
+            # check if intruder is dove/hawk/possessor/trader
+            if intruder.strategy == 'dove':
+                # hawk-dove
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'hawk':
+                # hawk-hawk
+                strategies.emulateHawkHawkStrategy(owner, intruder)
+            elif intruder.strategy == 'possessor':
+                # hawk-possessor == hawk-dove
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'trader':
+                # hawk-traderm == hawk-possessor == hawk-dove
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+
+        elif owner.strategy == 'possessor':
+            # check if intruder is dove/hawk/possessor/trader
+            if intruder.strategy == 'dove':
+                # possessor-dove
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'hawk':
+                # possessor-hawk
+                strategies.emulateHawkHawkStrategy(owner, intruder)
+            elif intruder.strategy == 'possessor':
+                # possessor-possessor
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'trader':
+                # possessor-trader
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            
+        elif owner.strategy == 'trader':
+            # check if intruder is dove/hawk/possessor/trader
+            if intruder.strategy == 'dove':
+                # trader-dove
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'hawk':
+                # trader-hawk
+                strategies.emulateHawkHawkStrategy(owner, intruder)
+            elif intruder.strategy == 'possessor':
+                # trader-possessor
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'trader':
+                # trader-trader
+                estimated_buying_price = owner.owner + (PROPERTY_INFLATION_PRICE * owner.owner)
+                if estimated_buying_price < intruder.wealth:
+                    strategies.emulateTradersStrategy(owner, intruder)
+                # if owner.owner < round(0.8 * intruder.wealth):
+                #     strategies.emulateTradersStrategy(owner, intruder)
+                # else:
+                #     strategies.emulateHawkDoveStrategy(owner, intruder)
+
+
             
     def saySomething(self, something):
-        print(something)
+        if 1==0:
+            print(something)
 
     def reproduce(self):
         # generate agent with same strategy as parent
         # print('I am a ' + self.strategy + str(self.unique_id) + ' and I am reproducing')
         new_unique_id = self.model.latest_id + 1
         self.model.latest_id += 1
-        # Initial Wealth is set to a random number between 1 and 16
-        initialWealth = random.randrange(1, 16, 1)
+        
+        # Initial Wealth is set from config - to a random number OR fixed amount
+        if WEALTH_TYPE == 'fixed':
+            initialWealth = FIXED_WEALTH_VALUE
+        else:
+            initialWealth = random.randrange(int(CONFIG_MODEL['initial_wealth_range_lower']), int(
+            CONFIG_MODEL['initial_wealth_range_upper']))
+        
         # a newborn has a probability to own a property of 50 %
         owner = 0
         if random.randrange(1, 11, 1) <= 5:
-            owner = round(0.8 * initialWealth)
-            initialWealth = round(0.2 * initialWealth)
+            if WEALTH_TYPE == 'fixed':
+                owner = FIXED_PROPERTY_VALUE
+            else:
+                initialWealth = round(0.2 * initialWealth)
+                owner = round(0.8 * initialWealth)
+        
         a = EvolutionaryAgent(new_unique_id, self.model, self.strategy, initialWealth, owner)
+        
         # the reproduced agent will stay on the same position as the parent
         self.model.grid.place_agent(a, self.pos)
         self.model.schedule.add(a)
