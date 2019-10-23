@@ -41,10 +41,11 @@ def U(v, p):
 class ToMAgent:
 	# General Methods and Fields for ToM agents
 
-	def __init__(self, n_deltas, n_contexts, directon, context = lambda offerMe, offerOther : offerMe - offerOther):
+	def __init__(self, n_deltas, n_contexts, directon, context = lambda offerSeller, offerBuyer : offerSeller - offerBuyer):
 
 		self.direction = direction
 		self.computeContext = context
+		self.beliefs = Beliefs0(n_deltas, n_contexts)
 
 		self.possibleDeltas = np.arange(0, 1 + 1/n_deltas, n_deltas)
 		self.n_contexts = n_contexts
@@ -66,8 +67,13 @@ class ToMAgent:
 
 		while(my_offer > opponent_offer): # Add stop condition in case my_offer gets lower than buying price
 
-			opponent_new = opponent(my_offer, opponent_offer)
-			my_new = self(my_offer, opponent_offer)
+			# Get binned context
+			context = self.direction*self.computeContext(my_offer, opponent_offer)
+			context = int(context/self.n_contexts)
+
+			# Compute next offers for agents
+			opponent_new = opponent(my_offer, opponent_offer, context)
+			my_new = self(my_offer, opponent_offer, context)
 
 			opponent_offer = opponent_new
 			my_offer = my_new
@@ -77,16 +83,8 @@ class ToMAgent:
 class ToM0(ToMAgent):
 	# 0-order ToM agent
 
-	def __init__(self, n_deltas, n_contexts, directon, context = lambda offerMe, offerOther : offerMe - offerOther):
+	def __call__(self, offerSeller, offerBuyer, context):
 
-		super(self, ToM0).__init__(n_deltas, n_contexts, direction, context)
-		self.beliefs = Beliefs0(n_deltas, n_contexts)
-
-	def __call__(self, offerSeller, offerBuyer):
-
-		# Get binned context
-		context = self.direction*self.computeContext(prevOffer, prevOfferOther)
-		context = int(context/self.n_contexts)
 
 		# Compute p dist over opponent's actions
 		p = self.beliefs(context)
@@ -98,3 +96,5 @@ class ToM0(ToMAgent):
 		action = np.argmax(U(v, p))
 		# Return offer with respect to optimal action
 		return (offerSeller if self.direction else offerBuyer) + self.__possibleDeltas[action]
+
+
