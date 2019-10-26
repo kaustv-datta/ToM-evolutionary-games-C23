@@ -81,19 +81,6 @@ class EvolutionaryModel(Model):
         # Natural selection
         strategies.naturalSelection(self)
 
-
-all_wealth = []
-all_strategies = []
-all_hawks = []
-all_doves = []
-all_traders = []
-all_possessors = []
-
-n_hawks = []
-n_doves = []
-n_possessors = []
-n_traders = []
-n_nonTraders = []
 n_steps = int(CONFIG_MODEL['steps'])
 n_agents = int(CONFIG_MODEL['total_agents'])
 
@@ -109,6 +96,18 @@ output_df = pd.DataFrame(columns = ['run', 'step', 'strategy', 'wealth', 'popula
 for sim_run in range(num_simulations):
     # EvolutionaryModel(N, width, height, step_cost, die_value, reproduce_value)
     model = EvolutionaryModel(n_agents, 10, 10, 2, 0, 10)
+    all_wealth = []
+    all_strategies = []
+    all_hawks = []
+    all_doves = []
+    all_traders = []
+    all_possessors = []
+
+    n_hawks = []
+    n_doves = []
+    n_possessors = []
+    n_traders = []
+    n_nonTraders = []
 
     for i in range(n_steps):
         model.step()
@@ -160,6 +159,7 @@ for sim_run in range(num_simulations):
 
 
     # shows a histogram of the total number of hawks and doves
+    plt.figure()
     plt.hist((all_strategies))
     plt.title("Total number of each remaining strategy")
     # plt.show()
@@ -167,6 +167,7 @@ for sim_run in range(num_simulations):
     plt.close()
 
     # shows a histogram of the wealth of hawks and doves
+    plt.figure()
     plt.hist((all_hawks, all_doves, all_traders, all_possessors),
             label=('Hawks', 'Doves', 'Traders', 'Possessors'))
     plt.title("Histogram of the wealth each strategy")
@@ -175,6 +176,7 @@ for sim_run in range(num_simulations):
     plt.savefig(os.path.join(output_folder,  'run_' + str(sim_run) + '_plot2.png'))
     plt.close()
 
+    plt.figure()
     plt.plot(n_hawks, label=('Hawks'))
     plt.plot(n_doves, label=('Doves'))
     plt.plot(n_traders, label=('Traders'))
@@ -185,6 +187,7 @@ for sim_run in range(num_simulations):
     plt.savefig(os.path.join(output_folder,  'run_' + str(sim_run) + '_plot3.png'))
     plt.close()
 
+    plt.figure()
     plt.plot(n_traders, label=('Traders'))
     plt.plot(n_nonTraders, label=('Non-Traders'))
     plt.title("Plot of number of traders and non-traders at each step")
