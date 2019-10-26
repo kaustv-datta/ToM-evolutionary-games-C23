@@ -6,6 +6,7 @@ from agent import EvolutionaryAgent
 import strategies
 import random
 import matplotlib.pyplot as plt
+import numpy as np
 import configparser
 import io
 import math
@@ -197,3 +198,55 @@ for sim_run in range(num_simulations):
     plt.close()
 
 output_df.to_csv(output_folder + '/simulation_results.csv', index=False)
+
+# Create aggregated plots
+grouped_data = output_df.groupby(['step', 'strategy'])
+grouped_data_dict = {}
+for strategy in strategyList:
+    population_key = 'population_' + strategy
+    wealth_key = 'wealth_' + strategy
+    grouped_data_dict[population_key] = []
+    grouped_data_dict[wealth_key] = []
+
+for step in range(n_steps):
+    for strategy in strategyList:
+        grouped_data_dict['population_' + strategy].append(grouped_data.get_group((step, strategy))['population'].mean())
+        grouped_data_dict['wealth_' + strategy].append(grouped_data.get_group((step, strategy))['wealth'].mean())
+
+# 1. Strategy population over time
+plt.figure()
+for strategy in strategyList:
+    plt.plot(grouped_data_dict['population_' + strategy], label=(strategy))
+plt.ylabel('Population')
+plt.xlabel('Simulation Steps')
+plt.title("Strategy population at each step")
+plt.legend()
+plt.savefig(os.path.join(output_folder,  'aggregated_population_plot.png'))
+plt.close()
+
+# 2. Strategy wealth over time
+plt.figure()
+for strategy in strategyList:
+    plt.plot(grouped_data_dict['wealth_' + strategy], label=(strategy))
+plt.ylabel('Wealth')
+plt.xlabel('Simulation Steps')
+plt.title("Strategy wealth accumilated at each step")
+plt.legend()
+plt.savefig(os.path.join(output_folder,  'aggregated_wealth_plot.png'))
+plt.close()
+
+# 3. Population histogram
+final_populations = []
+final_strategies = []
+for strategy in strategyList:
+    final_strategies.append(strategy)
+    final_populations.append(grouped_data.get_group((n_steps - 1, strategy))['population'].mean())
+y_pos = np.arange(len(final_strategies))
+plt.figure()
+plt.bar(y_pos, final_populations, align='center', alpha=0.5)
+plt.xticks(y_pos, final_strategies)
+plt.ylabel('Population')
+plt.xlabel('Strategies')
+plt.title('Population composition - end of simulation')
+plt.savefig(os.path.join(output_folder,  'aggregated_histogram_plot.png'))
+plt.close()
