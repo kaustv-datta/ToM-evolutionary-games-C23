@@ -21,6 +21,9 @@ class EvolutionaryAgent(Agent):
         self.strategy = initialStrategy
         self.owner = owner
 
+    def getTotalWealth(self):
+        return self.wealth + self.owner
+
     # Update agent wealth and property owned
     def updateAgentResource(self, wealth, owner):
         self.wealth = wealth

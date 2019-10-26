@@ -10,6 +10,8 @@ import configparser
 import io
 import math
 import os
+import pandas as pd
+from functools import reduce
 
 # Load the configuration file
 CONFIG = configparser.ConfigParser()
@@ -19,6 +21,7 @@ CONFIG_RESULTS = CONFIG['results']
 WEALTH_TYPE = CONFIG_MODEL['initial_wealth_type']
 FIXED_WEALTH_VALUE = int(CONFIG_MODEL['fixed_wealth_value'])
 FIXED_PROPERTY_VALUE = int(CONFIG_MODEL['fixed_property_value'])
+strategyList = CONFIG_MODEL['active_strategies'].split(',')
 
 
 # Main model which controls the agents
@@ -101,6 +104,8 @@ output_folder = os.path.join(working_directory, CONFIG_RESULTS['output_folder'])
 if not os.path.exists(output_folder):
     os.mkdir(output_folder)
 
+output_df = pd.DataFrame(columns = ['run', 'step', 'strategy', 'wealth', 'population'])
+
 for sim_run in range(num_simulations):
     # EvolutionaryModel(N, width, height, step_cost, die_value, reproduce_value)
     model = EvolutionaryModel(n_agents, 10, 10, 2, 0, 10)
@@ -133,10 +138,12 @@ for sim_run in range(num_simulations):
         n_possessors.append(number_possessor)
         n_nonTraders.append(number_nonTraders)
 
+        for strategy in strategyList:
+            strategy_agents = list(filter(lambda agent: agent.strategy == strategy, model.schedule.agents))
+            population = len(strategy_agents)
+            wealth = sum(agent.getTotalWealth() for agent in strategy_agents)
+            output_df = output_df.append(pd.Series([sim_run, i, strategy, wealth, population], index=output_df.columns ), ignore_index=True)
 
-    # for agent in model.schedule.agents:
-    #     print("I'm a " + agent.strategy + " and I have " +
-    #           str(agent.wealth) + "and I own" + str(agent.owner))
 
     # Store the results
     for agent in model.schedule.agents:
@@ -185,3 +192,5 @@ for sim_run in range(num_simulations):
     # plt.show()
     plt.savefig(os.path.join(output_folder,  'run_' + str(sim_run) + '_plot4.png'))
     plt.close()
+
+output_df.to_csv(output_folder + '/simulation_results.csv', index=False)
