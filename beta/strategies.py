@@ -36,27 +36,19 @@ def emulateHawkHawkStrategy(hawkO, hawkNO):
     h = getFightCost(owner)
 
     # if wealth/2 > h its the prisoners dilemma, otherwise its the chicken game
-    # one of both will win/be the Hawk while the other looses/be the dove
+    # one of both will win while the other looses
     player = [hawkO, hawkNO]
     winner = random.choice(player)
     player.remove(winner)
     looser = player[0]
-    if owner / 2 > h:
-        # prisoners dilemma:  both keep the hawk strategy, one will gain (V-h),
-        # the other will (loose -h)
-        winner.wealth -= h
-        winner.owner = owner
-        looser.wealth -= h
-        looser.owner = 0
-    else:
-        # chicken game: one chooses Hawk (winner) and the other one Dove
-        # (looser)
-        winner.saySomething("We will play the Chicken Game. I am Hawk " +
-                            str(winner.unique_id) +
-                            " and I fight, while Hawk " +
-                            str(looser.unique_id) +
-                            " behaves as a dove")
-        emulateHawkDoveStrategy(winner, looser)
+    # the winner is the (new) owner
+    # the looser is no owner (anymore)
+    # both have fighting costs that diminishes their wealth by h
+    winner.wealth -= h
+    winner.owner = owner
+    looser.wealth -= h
+    looser.owner = 0
+
     # Die if wealth is negative
     if looser.wealth < 0:
         looser.die()
@@ -105,6 +97,8 @@ def getFightCost(V):
         h = round(random.uniform(0, V/2))
     elif ACTIVE_GAME_TYPE == 'chicken-game':
         h = round(random.uniform(V/2, V))
+    elif ACTIVE_GAME_TYPE == 'no-predefined-game-type':
+        h = round(random.uniform(0, V))
     return h
 
 
