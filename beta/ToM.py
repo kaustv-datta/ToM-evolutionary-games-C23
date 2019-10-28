@@ -65,7 +65,7 @@ class ToMAgent:
 		self.setDirection(1 if self.outer.owner > 0 else -1, opponent) # when it has a nest aka is a seller
 		opponent.setDirection( -1*self.direction, self)
 
-		print("self:", self.direction, "other: ", opponent.direction)
+		#print("self:", self.direction, "other: ", opponent.direction)
 
 		if self.direction < 0:
 			return opponent.play(self)
@@ -84,8 +84,8 @@ class ToMAgent:
 			opponent_new, deltaOpponent = opponent(my_offer, opponent_offer, context)
 			my_new, deltaMe = self(my_offer, opponent_offer, context)
 
-			if opponent_offer>=1 or opponent_offer<0 or my_offer<=0 or my_offer>1:
-				return None
+			#if opponent_offer>=1 or opponent_offer<0 or my_offer<=0 or my_offer>1:
+				#return None
 
 			# Learn
 			opponent.learn(deltaMe, deltaOpponent, context)
@@ -116,12 +116,12 @@ class ToM0(ToMAgent):
 		p = self.beliefs(context)
 
 		# Get value of each agent-opponent action pair
-		v = V(self.possibleDeltas + offerSeller, self.possibleDeltas+offerBuyer, self.direction)
+		v = V(self.possibleDeltas*offerSeller, self.possibleDeltas*offerBuyer, self.direction)
 
 		# Compute optimal action (the index of the delta to use)
 		action = np.argmax(U(v, p))
 		# Return offer with respect to optimal action
-		return (offerSeller if self.direction else offerBuyer) + self.possibleDeltas[action], action
+		return (offerSeller if self.direction else offerBuyer)*self.possibleDeltas[action], action
 
 	def learn(self, deltaSeller, deltaBuyer, context):
 
@@ -150,10 +150,10 @@ class ToM1(ToMAgent):
 		opponent_action, _ = self.model(offerSeller, offerBuyer, context)
 
 		if self.direction>0:
-			sellerDeltas = self.possibleDeltas + offerSeller
+			sellerDeltas = self.possibleDeltas*offerSeller
 			buyerDeltas = opponent_action
 		else:
-			buyerDeltas = self.possibleDeltas + offerBuyer
+			buyerDeltas = self.possibleDeltas*offerBuyer
 			sellerDeltas = opponent_action
 
 		# Compute values for each of your actions
@@ -162,7 +162,7 @@ class ToM1(ToMAgent):
 		# Compute optimal action (the index of the delta to use)
 		action = np.argmax(v)
 		# Return offer with respect to optimal action
-		return (offerSeller if self.direction else offerBuyer) + self.possibleDeltas[action], action
+		return (offerSeller if self.direction else offerBuyer)*self.possibleDeltas[action], action
 
 	def learn(self, deltaSeller, deltaBuyer, context):
 
