@@ -16,21 +16,42 @@ FIXED_PROPERTY_VALUE = int(CONFIG_MODEL['fixed_property_value'])
 class EvolutionaryAgent(Agent):
     """ An agent with fixed initial wealth."""
     def __init__(self, unique_id, model, initialStrategy, wealth, owner):
+        """Agent constructor method
+        
+        Arguments:
+            Agent {mesa_object} -- mesa_object
+            unique_id {integer} -- unique agent ID
+            model {mesa_object} -- mesa_object model
+            initialStrategy {string} -- strategy of the agent (dove/hawk/...)
+            wealth {integer} -- wealth/money with the agent
+            owner {integer} -- value of property owned by agent
+        """
         super().__init__(unique_id, model)
         self.wealth = wealth
         self.strategy = initialStrategy
         self.owner = owner
 
     def getTotalWealth(self):
+        """Get total wealth owned by agent
+        
+        Returns:
+            integer -- wealth and property owned by agent
+        """
         return self.wealth + self.owner
 
-    # Update agent wealth and property owned
     def updateAgentResource(self, wealth, owner):
+        """Update the agent's resources
+        
+        Arguments:
+            wealth {integer} -- money owned by agent
+            owner {integer} -- property value owned by agent
+        """
         self.wealth = wealth
         self.owner = owner
         
-    # Move to a random surrounding tile
     def move(self):
+        """Move to a random surrounding tile
+        """
         possible_steps = self.model.grid.get_neighborhood(
             self.pos,
             moore=True,
@@ -39,8 +60,9 @@ class EvolutionaryAgent(Agent):
         new_position = self.random.choice(possible_steps)
         self.model.grid.move_agent(self, new_position)
         
-    # If another agent is on the same tile, interact with it
     def interact(self):
+        """If another agent is on the same tile, interact with it
+        """
         cellmates = self.model.grid.get_cell_list_contents([self.pos])
         # don't fight against yourself
         cellmates.remove(self)
@@ -49,14 +71,23 @@ class EvolutionaryAgent(Agent):
             self.chooseInteraction(other)
 
     def chooseInteraction(self, other):
+        """Choose if agent is owner or intruder
+        
+        Arguments:
+            other {Agent} -- the other agent to interact with
+        """
         if self.owner > 0 and other.owner == 0:
             self.chooseOwnerIntruderInteraction(self, other)
         elif self.owner == 0 and other.owner > 0:
             self.chooseOwnerIntruderInteraction(other, self)
 
     def chooseOwnerIntruderInteraction(self, owner, intruder):
-        # The intruder values the property as v = 0.8 of its own wealth
-        # Agents will trade if both are traders and if the intruder values the property more then the owner
+        """Handle all interaction scenarios for various strategies
+        
+        Arguments:
+            owner {Agent} -- Owner of the cell
+            intruder {Agent} -- Agent intruding the cell
+        """
 
         if owner.strategy == 'dove':
             # check if intruder is dove/hawk/possessor/trader
@@ -119,20 +150,23 @@ class EvolutionaryAgent(Agent):
                 estimated_buying_price = owner.owner + (PROPERTY_INFLATION_PRICE * owner.owner)
                 if estimated_buying_price < intruder.wealth:
                     strategies.emulateTradersStrategy(owner, intruder)
-                # if owner.owner < round(0.8 * intruder.wealth):
-                #     strategies.emulateTradersStrategy(owner, intruder)
-                # else:
-                #     strategies.emulateHawkDoveStrategy(owner, intruder)
 
 
             
     def saySomething(self, something):
+        """Agent can speak
+        
+        Arguments:
+            something {string} -- what to say
+        """
         if 1==0:
             print(something)
 
     def reproduce(self):
+        """Agent can reproduce another agent with it's own strategy
+        """
         # generate agent with same strategy as parent
-        # print('I am a ' + self.strategy + str(self.unique_id) + ' and I am reproducing')
+        print('I am a ' + self.strategy + str(self.unique_id) + ' and I am reproducing')
         new_unique_id = self.model.latest_id + 1
         self.model.latest_id += 1
         
@@ -159,21 +193,15 @@ class EvolutionaryAgent(Agent):
         self.model.schedule.add(a)
 
     def die(self):
-        # Death
-        # print('I am a ' + agent.strategy + str(agent.unique_id) + ' and I am dead')
+        """Death
+        """
+        print('I am a ' + self.strategy + str(self.unique_id) + ' and I am dead')
         self.model.grid._remove_agent(self.pos, self)
         self.model.schedule.remove(self)
 
-    def checkToDie(self):
-        # if the wealth of the agent is lower than the 'die_value', the die() method will be called
-        living = True
-        if self.wealth <= self.model.die_value:
-            living = False
-            self.die()
-        return living
-
     
-    # Action to be performed per tick of the model
     def step(self):
+        """Agent action to be performed per tick of the model
+        """
         self.move()
         self.interact()

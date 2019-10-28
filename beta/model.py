@@ -29,12 +29,16 @@ strategyList = CONFIG_MODEL['active_strategies'].split(',')
 class EvolutionaryModel(Model):
     """A model with some number of agents."""
 
-    def __init__(self, N, width, height, step_cost, die_value, reproduce_value):
+    def __init__(self, N, width, height):
+        """Contructor function
+        
+        Arguments:
+            N {integer} -- Number of initial agents in the model
+            width {integer} -- Model grid width
+            height {integer} -- Model grid height
+        """
         self.num_agents = N
         self.grid = MultiGrid(width, height, True)
-        self.step_cost = step_cost
-        self.die_value = die_value
-        self.reproduce_value = reproduce_value
         self.schedule = RandomActivation(self)
         self.latest_id = N-1
 
@@ -78,6 +82,8 @@ class EvolutionaryModel(Model):
             agent.updateAgentResource(updated_wealth, updated_owner)
 
     def step(self):
+        """Steps to take at each tick of the model
+        """
         self.schedule.step()
         # Natural selection
         strategies.naturalSelection(self)
@@ -95,8 +101,8 @@ if not os.path.exists(output_folder):
 output_df = pd.DataFrame(columns = ['run', 'step', 'strategy', 'wealth', 'population'])
 
 for sim_run in range(num_simulations):
-    # EvolutionaryModel(N, width, height, step_cost, die_value, reproduce_value)
-    model = EvolutionaryModel(n_agents, 10, 10, 2, 0, 10)
+    # EvolutionaryModel(N, width, height)
+    model = EvolutionaryModel(n_agents, 10, 10)
     all_wealth = []
     all_strategies = []
     all_hawks = []
