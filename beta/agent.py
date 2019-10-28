@@ -12,12 +12,14 @@ FIXED_WEALTH_VALUE = int(CONFIG_MODEL['fixed_wealth_value'])
 PROPERTY_INFLATION_PRICE = float(CONFIG_MODEL['property_buy_price_percentage'])
 FIXED_PROPERTY_VALUE = int(CONFIG_MODEL['fixed_property_value'])
 
+
 # An evolutionary agent
 class EvolutionaryAgent(Agent):
     """ An agent with fixed initial wealth."""
+
     def __init__(self, unique_id, model, initialStrategy, wealth, owner):
         """Agent constructor method
-        
+
         Arguments:
             Agent {mesa_object} -- mesa_object
             unique_id {integer} -- unique agent ID
@@ -33,7 +35,7 @@ class EvolutionaryAgent(Agent):
 
     def getTotalWealth(self):
         """Get total wealth owned by agent
-        
+
         Returns:
             integer -- wealth and property owned by agent
         """
@@ -41,14 +43,14 @@ class EvolutionaryAgent(Agent):
 
     def updateAgentResource(self, wealth, owner):
         """Update the agent's resources
-        
+
         Arguments:
             wealth {integer} -- money owned by agent
             owner {integer} -- property value owned by agent
         """
         self.wealth = wealth
         self.owner = owner
-        
+
     def move(self):
         """Move to a random surrounding tile
         """
@@ -59,7 +61,7 @@ class EvolutionaryAgent(Agent):
         )
         new_position = self.random.choice(possible_steps)
         self.model.grid.move_agent(self, new_position)
-        
+
     def interact(self):
         """If another agent is on the same tile, interact with it
         """
@@ -72,7 +74,7 @@ class EvolutionaryAgent(Agent):
 
     def chooseInteraction(self, other):
         """Choose if agent is owner or intruder
-        
+
         Arguments:
             other {Agent} -- the other agent to interact with
         """
@@ -83,7 +85,7 @@ class EvolutionaryAgent(Agent):
 
     def chooseOwnerIntruderInteraction(self, owner, intruder):
         """Handle all interaction scenarios for various strategies
-        
+
         Arguments:
             owner {Agent} -- Owner of the cell
             intruder {Agent} -- Agent intruding the cell
@@ -133,7 +135,7 @@ class EvolutionaryAgent(Agent):
             elif intruder.strategy == 'trader':
                 # possessor-trader
                 strategies.emulateHawkDoveStrategy(owner, intruder)
-            
+
         elif owner.strategy == 'trader':
             # check if intruder is dove/hawk/possessor/trader
             if intruder.strategy == 'dove':
@@ -147,36 +149,36 @@ class EvolutionaryAgent(Agent):
                 strategies.emulateHawkDoveStrategy(owner, intruder)
             elif intruder.strategy == 'trader':
                 # trader-trader
-                estimated_buying_price = owner.owner + (PROPERTY_INFLATION_PRICE * owner.owner)
+                estimated_buying_price = owner.owner + \
+                    (PROPERTY_INFLATION_PRICE * owner.owner)
                 if estimated_buying_price < intruder.wealth:
                     strategies.emulateTradersStrategy(owner, intruder)
 
-
-            
     def saySomething(self, something):
         """Agent can speak
-        
+
         Arguments:
             something {string} -- what to say
         """
-        if 1==0:
+        if 1 == 0:
             print(something)
 
     def reproduce(self):
         """Agent can reproduce another agent with it's own strategy
         """
         # generate agent with same strategy as parent
-        print('I am a ' + self.strategy + str(self.unique_id) + ' and I am reproducing')
+        print('I am a ' + self.strategy +
+              str(self.unique_id) + ' and I am reproducing')
         new_unique_id = self.model.latest_id + 1
         self.model.latest_id += 1
-        
+
         # Initial Wealth is set from config - to a random number OR fixed amount
         if WEALTH_TYPE == 'fixed':
             initialWealth = FIXED_WEALTH_VALUE
         else:
             initialWealth = random.randrange(int(CONFIG_MODEL['initial_wealth_range_lower']), int(
-            CONFIG_MODEL['initial_wealth_range_upper']))
-        
+                CONFIG_MODEL['initial_wealth_range_upper']))
+
         # a newborn has a probability to own a property of 50 %
         owner = 0
         if random.randrange(1, 11, 1) <= 5:
@@ -185,9 +187,10 @@ class EvolutionaryAgent(Agent):
             else:
                 initialWealth = round(0.2 * initialWealth)
                 owner = round(0.8 * initialWealth)
-        
-        a = EvolutionaryAgent(new_unique_id, self.model, self.strategy, initialWealth, owner)
-        
+
+        a = EvolutionaryAgent(new_unique_id, self.model,
+                              self.strategy, initialWealth, owner)
+
         # the reproduced agent will stay on the same position as the parent
         self.model.grid.place_agent(a, self.pos)
         self.model.schedule.add(a)
@@ -195,11 +198,11 @@ class EvolutionaryAgent(Agent):
     def die(self):
         """Death
         """
-        print('I am a ' + self.strategy + str(self.unique_id) + ' and I am dead')
+        print('I am a ' + self.strategy +
+              str(self.unique_id) + ' and I am dead')
         self.model.grid._remove_agent(self.pos, self)
         self.model.schedule.remove(self)
 
-    
     def step(self):
         """Agent action to be performed per tick of the model
         """

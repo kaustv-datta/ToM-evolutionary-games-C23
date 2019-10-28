@@ -21,7 +21,7 @@ ACTIVE_GAME_TYPE = CONFIG_MODEL['game_type']
 
 def emulateHawkDoveStrategy(hawk, dove):
     """Hawk-Dove OR Dove-Hawk strategy
-    
+
     Arguments:
         hawk {Agent} -- the hawkish agent
         dove {Agent} -- the dove agent
@@ -37,7 +37,7 @@ def emulateHawkDoveStrategy(hawk, dove):
 
 def emulateHawkHawkStrategy(hawkO, hawkNO):
     """Hawk-Hawk strategy
-    
+
     Arguments:
         hawkO {Agent} -- Hawk Owner Agent
         hawkNO {Agent} -- Hawk Intruder Agent
@@ -68,7 +68,7 @@ def emulateHawkHawkStrategy(hawkO, hawkNO):
 
 def emulateDoveDoveStrategy(doveO, doveNO):
     """Dove-Dove strategy
-    
+
     Arguments:
         doveO {Agent} -- Dove Owner Agent
         doveNO {Agent} -- Dove Intruder Agent
@@ -92,12 +92,13 @@ def emulateDoveDoveStrategy(doveO, doveNO):
 
 def emulateTradersStrategy(owner, intruder):
     """Trading strategy
-    
+
     Arguments:
         owner {Agent} -- Trader Owner Agent
         intruder {Agent} -- Trader Intruder Agent
     """
-    estimated_buying_price = owner.owner + (PROPERTY_INFLATION_PRICE * owner.owner)
+    estimated_buying_price = owner.owner + \
+        (PROPERTY_INFLATION_PRICE * owner.owner)
     x = owner.owner + round((estimated_buying_price - owner.owner) / 2)
     owner.owner = 0
     owner.wealth += x
@@ -108,10 +109,10 @@ def emulateTradersStrategy(owner, intruder):
 
 def getFightCost(V):
     """Get cost of interaction or fight
-    
+
     Arguments:
         V {integer} -- Value of property being fought
-    
+
     Returns:
         integer -- cost of the fight
     """
@@ -127,7 +128,7 @@ def getFightCost(V):
 
 def naturalSelection(model):
     """Kill agents with bad performing strategies and replicate the good strategies
-    
+
     Arguments:
         model {Model} -- Mesa model object
     """
