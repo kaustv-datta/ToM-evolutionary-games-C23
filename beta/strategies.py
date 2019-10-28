@@ -18,8 +18,13 @@ strategyList = CONFIG_MODEL['active_strategies'].split(',')
 ACTIVE_GAME_TYPE = CONFIG_MODEL['game_type']
 
 
-# Hawk-Dove OR Dove-Hawk
 def emulateHawkDoveStrategy(hawk, dove):
+    """Hawk-Dove OR Dove-Hawk strategy
+
+    Arguments:
+        hawk {Agent} -- the hawkish agent
+        dove {Agent} -- the dove agent
+    """
     # hawk gains resource
     if dove.owner > 0:
         hawk.owner = dove.owner
@@ -29,33 +34,30 @@ def emulateHawkDoveStrategy(hawk, dove):
     dove.saySomething('I am dove. I lost')
 
 
-# Hawk-Hawk
 def emulateHawkHawkStrategy(hawkO, hawkNO):
+    """Hawk-Hawk strategy
+
+    Arguments:
+        hawkO {Agent} -- Hawk Owner Agent
+        hawkNO {Agent} -- Hawk Intruder Agent
+    """
     owner = hawkO.owner
     h = getFightCost(owner)
 
     # if wealth/2 > h its the prisoners dilemma, otherwise its the chicken game
-    # one of both will win/be the Hawk while the other looses/be the dove
+    # one of both will win while the other looses
     player = [hawkO, hawkNO]
     winner = random.choice(player)
     player.remove(winner)
     looser = player[0]
-    if owner / 2 > h:
-        # prisoners dilemma:  both keep the hawk strategy, one will gain (V-h),
-        # the other will (loose -h)
-        winner.wealth -= h
-        winner.owner = owner
-        looser.wealth -= h
-        looser.owner = 0
-    else:
-        # chicken game: one chooses Hawk (winner) and the other one Dove
-        # (looser)
-        winner.saySomething("We will play the Chicken Game. I am Hawk " +
-                            str(winner.unique_id) +
-                            " and I fight, while Hawk " +
-                            str(looser.unique_id) +
-                            " behaves as a dove")
-        emulateHawkDoveStrategy(winner, looser)
+    # the winner is the (new) owner
+    # the looser is no owner (anymore)
+    # both have fighting costs that diminishes their wealth by h
+    winner.wealth -= h
+    winner.owner = owner
+    looser.wealth -= h
+    looser.owner = 0
+
     # Die if wealth is negative
     if looser.wealth < 0:
         looser.die()
@@ -63,8 +65,13 @@ def emulateHawkHawkStrategy(hawkO, hawkNO):
         winner.die()
 
 
-# Dove-Dove
 def emulateDoveDoveStrategy(doveO, doveNO):
+    """Dove-Dove strategy
+
+    Arguments:
+        doveO {Agent} -- Dove Owner Agent
+        doveNO {Agent} -- Dove Intruder Agent
+    """
     owner = doveO.owner
     player = [doveO, doveNO]
     # random dove retreats
@@ -82,15 +89,15 @@ def emulateDoveDoveStrategy(doveO, doveNO):
     looser.saySomething('I am dove ' + str(looser.unique_id) + ". I retreated")
 
 
-# TRADING STRATEGIES
-
-# Traders vs Traders
 def emulateTradersStrategy(owner, intruder):
-    # intruder values the property V = 0.8 * intruder.wealth
-    # owner values the property v = owner.owner
-    # owner sells the property for x = (V + v) / 2
-    # x = round((0.8 * intruder.wealth + owner.owner) / 2)
-    estimated_buying_price = owner.owner + (PROPERTY_INFLATION_PRICE * owner.owner)
+    """Trading strategy
+
+    Arguments:
+        owner {Agent} -- Trader Owner Agent
+        intruder {Agent} -- Trader Intruder Agent
+    """
+    estimated_buying_price = owner.owner + \
+        (PROPERTY_INFLATION_PRICE * owner.owner)
     x = owner.owner + round((estimated_buying_price - owner.owner) / 2)
     owner.owner = 0
     owner.wealth += x
@@ -149,16 +156,30 @@ def emulateToMToMStrategy(owner, intruder):
 
 # Get cost of interaction or fight
 def getFightCost(V):
+    """Get cost of interaction or fight
+
+    Arguments:
+        V {integer} -- Value of property being fought
+
+    Returns:
+        integer -- cost of the fight
+    """
     h = 0
     if ACTIVE_GAME_TYPE == 'prisoners-dilema':
         h = round(random.uniform(0, V / 2))
     elif ACTIVE_GAME_TYPE == 'chicken-game':
-        h = round(random.uniform(V / 2, V))
+        h = round(random.uniform(V/2, V))
+    elif ACTIVE_GAME_TYPE == 'no-predefined-game-type':
+        h = round(random.uniform(0, V))
     return h
 
 
-# Kill agents with bad performing strategies and replicate the good strategies
 def naturalSelection(model):
+    """Kill agents with bad performing strategies and replicate the good strategies
+
+    Arguments:
+        model {Model} -- Mesa model object
+    """
     all_agents = model.schedule.agents
     agent_wealths = [agent.owner + agent.wealth for agent in all_agents]
     average_wealth = statistics.mean(agent_wealths)
