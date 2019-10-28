@@ -137,14 +137,21 @@ def emulateToMTraderStrategy(owner, intruder):
 def emulateToMToMStrategy(owner, intruder):
     # v = owner.owner
     # estimated_buying_price = v + (PROPERTY_INFLATION_PRICE * v)
+    #print("initial property owner:", owner.owner, "\t \t initial wealth owner:", owner.wealth)
+    #print("initial property intruder:", intruder.owner, "\t \t initial wealth intruder:", intruder.wealth)
     p = owner.ToMAgent.play(intruder.ToMAgent)
     if p != None:
         x = p * intruder.wealth
+        #print("excess paied:",x)
 
         owner.owner = 0
         owner.wealth += x
         intruder.owner = x
         intruder.wealth -= x
+
+        #print("final property owner:", owner.owner, "\t \tfinal wealth owner:", owner.wealth)
+        #print("final property intruder:", intruder.owner, "\t \tfinal wealth intruder:", intruder.wealth)
+        #print("____________________________________________________________________________________")
 
 
 # Get cost of interaction or fight

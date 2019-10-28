@@ -25,7 +25,7 @@ class EvolutionaryAgent(Agent):
         self.strategy = initialStrategy
         self.owner = owner
 
-        if random.random() >= 0.5:
+        if  self.strategy=='traderToM1' or (self.strategy!='traderToM0' and random.random() >= 0.5) :
             self.ToMAgent = ToM.ToM1(N_DELTAS, N_CONTEXTS, self)
         else:
             self.ToMAgent = ToM.ToM0(N_DELTAS, N_CONTEXTS, self)

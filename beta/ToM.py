@@ -48,7 +48,7 @@ class ToMAgent:
 		self.direction = None
 		self.computeContext = context
 
-		self.possibleDeltas = np.arange(0, 1 , 1/n_deltas)
+		self.possibleDeltas = np.arange(1/(n_deltas+1), 1 , 1/(n_deltas+1))
 		self.n_deltas = n_deltas
 		self.n_contexts = n_contexts
 
@@ -73,6 +73,8 @@ class ToMAgent:
 		# The seller handles the trade (if I get here I am the seller)
 		my_offer = 1.0
 		opponent_offer = 0.0
+		#print("opponent offer:", opponent_offer)
+		#print("my offer:", my_offer)
 
 		while(my_offer > opponent_offer):
 
@@ -84,8 +86,8 @@ class ToMAgent:
 			opponent_new, deltaOpponent = opponent(my_offer, opponent_offer, context)
 			my_new, deltaMe = self(my_offer, opponent_offer, context)
 
-			#if opponent_offer>=1 or opponent_offer<0 or my_offer<=0 or my_offer>1:
-				#return None
+			if opponent_offer>=1 or opponent_offer<0 or my_offer<=0 or my_offer>1:
+				return None
 
 			# Learn
 			opponent.learn(deltaMe, deltaOpponent, context)
@@ -95,10 +97,17 @@ class ToMAgent:
 			opponent_offer = opponent_new
 			my_offer = my_new
 
+			#print("opponent offer:", opponent_offer, " action: ", deltaOpponent)
+			#print("my offer:", my_offer, " action: ", deltaMe)
+		#print("/////////////////////////////////////////////////////////")
+
 		# Add stop condition if offer of buyer is lower then the minimum price of the seller.
 		# If this is the case there is no exchange
-		if opponent_offer <= self.outer.owner:
+		if opponent_offer*opponent.outer.wealth <= self.outer.owner:
+			#print("\tNOT CONCLUDED")
 			return None
+
+		#print("\t CONCLUDED!!!!")
 
 		return opponent_offer
 
@@ -116,12 +125,13 @@ class ToM0(ToMAgent):
 		p = self.beliefs(context)
 
 		# Get value of each agent-opponent action pair
-		v = V(self.possibleDeltas*offerSeller, self.possibleDeltas*offerBuyer, self.direction)
+		v = V(offerSeller - self.possibleDeltas, offerBuyer + self.possibleDeltas, self.direction)
 
 		# Compute optimal action (the index of the delta to use)
 		action = np.argmax(U(v, p))
 		# Return offer with respect to optimal action
-		return (offerSeller if self.direction else offerBuyer)*self.possibleDeltas[action], action
+		# print((offerSeller if self.direction>0 else offerBuyer), " - ", self.direction, "*", self.possibleDeltas[action])
+		return (offerSeller if self.direction>0 else offerBuyer) -self.direction*self.possibleDeltas[action], action
 
 	def learn(self, deltaSeller, deltaBuyer, context):
 
@@ -150,10 +160,10 @@ class ToM1(ToMAgent):
 		opponent_action, _ = self.model(offerSeller, offerBuyer, context)
 
 		if self.direction>0:
-			sellerDeltas = self.possibleDeltas*offerSeller
+			sellerDeltas = self.possibleDeltas-offerSeller
 			buyerDeltas = opponent_action
 		else:
-			buyerDeltas = self.possibleDeltas*offerBuyer
+			buyerDeltas = self.possibleDeltas+offerBuyer
 			sellerDeltas = opponent_action
 
 		# Compute values for each of your actions
@@ -162,7 +172,8 @@ class ToM1(ToMAgent):
 		# Compute optimal action (the index of the delta to use)
 		action = np.argmax(v)
 		# Return offer with respect to optimal action
-		return (offerSeller if self.direction else offerBuyer)*self.possibleDeltas[action], action
+		# print((offerSeller if self.direction>0 else offerBuyer), " - ", self.direction, "*", self.possibleDeltas[action])
+		return (offerSeller if self.direction>0 else offerBuyer)-self.direction*self.possibleDeltas[action], action
 
 	def learn(self, deltaSeller, deltaBuyer, context):
 
