@@ -2,6 +2,7 @@ from mesa import Agent
 import strategies
 import random
 import configparser
+import ToM
 
 # Load the configuration file
 CONFIG = configparser.ConfigParser()
@@ -12,6 +13,9 @@ FIXED_WEALTH_VALUE = int(CONFIG_MODEL['fixed_wealth_value'])
 PROPERTY_INFLATION_PRICE = float(CONFIG_MODEL['property_buy_price_percentage'])
 FIXED_PROPERTY_VALUE = int(CONFIG_MODEL['fixed_property_value'])
 
+N_DELTAS = 10
+N_CONTEXTS = 10
+
 # An evolutionary agent
 class EvolutionaryAgent(Agent):
     """ An agent with fixed initial wealth."""
@@ -20,6 +24,11 @@ class EvolutionaryAgent(Agent):
         self.wealth = wealth
         self.strategy = initialStrategy
         self.owner = owner
+
+        if random.random() >= 0.5:
+            self.ToMAgent = ToM.ToM1(N_DELTAS, N_CONTEXTS, self)
+        else:
+            self.ToMAgent = ToM.ToM0(N_DELTAS, N_CONTEXTS, self)
 
     def getTotalWealth(self):
         return self.wealth + self.owner
@@ -57,6 +66,7 @@ class EvolutionaryAgent(Agent):
     def chooseOwnerIntruderInteraction(self, owner, intruder):
         # The intruder values the property as v = 0.8 of its own wealth
         # Agents will trade if both are traders and if the intruder values the property more then the owner
+        estimated_buying_price = owner.owner + (PROPERTY_INFLATION_PRICE * owner.owner)
 
         if owner.strategy == 'dove':
             # check if intruder is dove/hawk/possessor/trader
@@ -70,6 +80,12 @@ class EvolutionaryAgent(Agent):
                 # dove-possessor == dove-dove
                 strategies.emulateDoveDoveStrategy(owner, intruder)
             elif intruder.strategy == 'trader':
+                # dove-trader
+                strategies.emulateDoveDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'traderToM0':
+                # dove-trader
+                strategies.emulateDoveDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'traderToM1':
                 # dove-trader
                 strategies.emulateDoveDoveStrategy(owner, intruder)
 
@@ -87,6 +103,12 @@ class EvolutionaryAgent(Agent):
             elif intruder.strategy == 'trader':
                 # hawk-traderm == hawk-possessor == hawk-dove
                 strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'traderToM0':
+                # hawk-traderm == hawk-possessor == hawk-dove
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'traderToM1':
+                # hawk-traderm == hawk-possessor == hawk-dove
+                strategies.emulateHawkDoveStrategy(owner, intruder)
 
         elif owner.strategy == 'possessor':
             # check if intruder is dove/hawk/possessor/trader
@@ -102,7 +124,13 @@ class EvolutionaryAgent(Agent):
             elif intruder.strategy == 'trader':
                 # possessor-trader
                 strategies.emulateHawkDoveStrategy(owner, intruder)
-            
+            elif intruder.strategy == 'traderToM0':
+                # hawk-traderm == hawk-possessor == hawk-dove
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'traderToM1':
+                # hawk-traderm == hawk-possessor == hawk-dove
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+
         elif owner.strategy == 'trader':
             # check if intruder is dove/hawk/possessor/trader
             if intruder.strategy == 'dove':
@@ -114,16 +142,37 @@ class EvolutionaryAgent(Agent):
             elif intruder.strategy == 'possessor':
                 # trader-possessor
                 strategies.emulateHawkDoveStrategy(owner, intruder)
+
             elif intruder.strategy == 'trader':
                 # trader-trader
-                estimated_buying_price = owner.owner + (PROPERTY_INFLATION_PRICE * owner.owner)
                 if estimated_buying_price < intruder.wealth:
                     strategies.emulateTradersStrategy(owner, intruder)
-                # if owner.owner < round(0.8 * intruder.wealth):
-                #     strategies.emulateTradersStrategy(owner, intruder)
-                # else:
-                #     strategies.emulateHawkDoveStrategy(owner, intruder)
 
+            elif intruder.strategy == 'traderToM0' or intruder.strategy == 'traderToM1':
+                #trader no ToM - trader with ToM
+                if estimated_buying_price < intruder.wealth:
+                    strategies.emulateTraderToMStrategy(owner, intruder)
+
+        elif owner.strategy == 'traderToM0' or owner.strategy == 'traderToM1':
+            # check if intruder is dove/hawk/possessor/trader
+            if intruder.strategy == 'dove':
+                # trader-dove
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'hawk':
+                # trader-hawk
+                strategies.emulateHawkHawkStrategy(owner, intruder)
+            elif intruder.strategy == 'possessor':
+                # trader-possessor
+                strategies.emulateHawkDoveStrategy(owner, intruder)
+            elif intruder.strategy == 'trader':
+                # trader with ToM-trader
+                if estimated_buying_price < intruder.wealth:
+                    strategies.emulateToMTraderStrategy(owner, intruder)
+
+            elif intruder.strategy == 'traderToM0' or intruder.strategy == 'traderToM1':
+                # trader no ToM - trader with ToM
+                if estimated_buying_price < intruder.wealth:
+                    strategies.emulateToMToMStrategy(owner, intruder)
 
             
     def saySomething(self, something):

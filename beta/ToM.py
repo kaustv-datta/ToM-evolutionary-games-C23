@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 PENALTY = -4
 
@@ -25,11 +26,11 @@ class Beliefs0:
 
 def V(OSeller, OBuyer, i=-1):
 
-	v = i*OBuyer*np.ones([np.size(OSeller), np.size(OBuyer)])
-	v[OSeller.T > OBuyer] = PENALTY
+	v = np.squeeze(i*OBuyer*np.ones([np.size(OSeller), np.size(OBuyer)]))
+	v[np.transpose(OSeller) > OBuyer] = PENALTY
 
 	if i<0:
-		return v.T
+		return np.transpose(v)
 
 	return v
 
@@ -41,38 +42,50 @@ def U(v, p):
 class ToMAgent:
 	# General Methods and Fields for ToM agents
 
-	def __init__(self, n_deltas, n_contexts, directon, context = lambda offerSeller, offerBuyer : offerSeller - offerBuyer):
+	def __init__(self, n_deltas, n_contexts, outer, context = lambda offerSeller, offerBuyer : offerSeller - offerBuyer):
 
-		self.direction = direction
+		self.outer = outer
+		self.direction = None
 		self.computeContext = context
 
-		self.possibleDeltas = np.arange(0, 1 + 1/n_deltas, n_deltas)
+		self.possibleDeltas = np.arange(0, 1 , 1/n_deltas)
+		self.n_deltas = n_deltas
 		self.n_contexts = n_contexts
 
-	def __call__(self, offerSeller, offerBuyer):
+	def __call__(self, offerSeller, offerBuyer, context):
 		# Get optimal action to do
 		pass
 
+	def setDirection(self, newDirection, opponent=None):
+		self.direction = newDirection
+
 	def play(self, opponent):
 		# Play full bargaining with opponent
+		# print("self:", self.direction, "other: ", opponent.direction)
+		self.setDirection(1 if self.outer.owner > 0 else -1, opponent) # when it has a nest aka is a seller
+		opponent.setDirection( -1*self.direction, self)
+
+		print("self:", self.direction, "other: ", opponent.direction)
+
 		if self.direction < 0:
-			if opponent.direction < 0: # Two buyers
-				return None
 			return opponent.play(self)
 
 		# The seller handles the trade (if I get here I am the seller)
 		my_offer = 1.0
 		opponent_offer = 0.0
 
-		while(my_offer > opponent_offer): # Add stop condition in case my_offer gets lower than buying price
+		while(my_offer > opponent_offer):
 
 			# Get binned context
-			context = self.direction*self.computeContext(my_offer, opponent_offer)
-			context = int(context/self.n_contexts)
+			context = self.computeContext(my_offer, opponent_offer)
+			context = math.floor(context*(self.n_contexts-1))
 
 			# Compute next offers for agents
 			opponent_new, deltaOpponent = opponent(my_offer, opponent_offer, context)
 			my_new, deltaMe = self(my_offer, opponent_offer, context)
+
+			if opponent_offer>=1 or opponent_offer<0 or my_offer<=0 or my_offer>1:
+				return None
 
 			# Learn
 			opponent.learn(deltaMe, deltaOpponent, context)
@@ -82,58 +95,74 @@ class ToMAgent:
 			opponent_offer = opponent_new
 			my_offer = my_new
 
+		# Add stop condition if offer of buyer is lower then the minimum price of the seller.
+		# If this is the case there is no exchange
+		if opponent_offer <= self.outer.owner:
+			return None
 
+		return opponent_offer
 
 class ToM0(ToMAgent):
 	# 0-order ToM agent
 
-	def __init__(self, n_deltas, n_contexts, directon, context = lambda offerSeller, offerBuyer : offerSeller - offerBuyer):
+	def __init__(self, n_deltas, n_contexts, outer, context = lambda offerSeller, offerBuyer : offerSeller - offerBuyer):
 
-		super(self, ToM0).__init__(n_deltas, n_contexts, direction, context)
+		super(ToM0, self).__init__(n_deltas, n_contexts, outer, context)
 		self.beliefs = Beliefs0(n_deltas, n_contexts)
 
 	def __call__(self, offerSeller, offerBuyer, context):
-
 
 		# Compute p dist over opponent's actions
 		p = self.beliefs(context)
 
 		# Get value of each agent-opponent action pair
-		v = V(self.__possibleDeltas+offerSeller, self.__possibleDeltas+offerBuyer, self.direction)
+		v = V(self.possibleDeltas + offerSeller, self.possibleDeltas+offerBuyer, self.direction)
 
 		# Compute optimal action (the index of the delta to use)
 		action = np.argmax(U(v, p))
 		# Return offer with respect to optimal action
-		return (offerSeller if self.direction else offerBuyer) + self.__possibleDeltas[action], action
+		return (offerSeller if self.direction else offerBuyer) + self.possibleDeltas[action], action
 
 	def learn(self, deltaSeller, deltaBuyer, context):
 
 		if self.direction:
 			self.beliefs.observe(deltaBuyer, context)
 		else:
-			self.beliefs.observe(deltaSeller, context)
+			self.beliefs.observe(self.n_deltas -1 -deltaSeller, context)
 
 
 class ToM1(ToMAgent):
 	# 1-order ToM agent
 
-	def __init__(self, n_deltas, n_contexts, directon, context = lambda offerSeller, offerBuyer : offerSeller - offerBuyer):
+	def __init__(self, n_deltas, n_contexts, outer, context = lambda offerSeller, offerBuyer : offerSeller - offerBuyer):
 
-		super(self, ToM0).__init__(n_deltas, n_contexts, direction, context)
-		self.model = ToM1(n_deltas, n_contexts, -1*direction, None)
+		super(ToM1,self).__init__(n_deltas, n_contexts, outer, context)
+		self.model = ToM0(n_deltas, n_contexts, None, None)
+
+	def setDirection(self, newDirection, opponent):
+		super(ToM1, self).setDirection(newDirection, opponent)
+		self.model.outer = opponent
+		self.model.setDirection(-1*self.direction)
 
 	def __call__(self, offerSeller, offerBuyer, context):
 
 		# Predict action of opponent
-		opponent_action = self.model(offerSeller, offerBuyer, context)
+		opponent_action, _ = self.model(offerSeller, offerBuyer, context)
+
+		if self.direction>0:
+			sellerDeltas = self.possibleDeltas + offerSeller
+			buyerDeltas = opponent_action
+		else:
+			buyerDeltas = self.possibleDeltas + offerBuyer
+			sellerDeltas = opponent_action
 
 		# Compute values for each of your actions
-		v = V(self.__possibleDeltas+offerSeller, self.__possibleDeltas+offerBuyer, self.direction)
+		v = V(sellerDeltas, buyerDeltas, self.direction)
 
 		# Compute optimal action (the index of the delta to use)
 		action = np.argmax(v)
 		# Return offer with respect to optimal action
-		return (offerSeller if self.direction else offerBuyer) + self.__possibleDeltas[action], action
+		return (offerSeller if self.direction else offerBuyer) + self.possibleDeltas[action], action
 
 	def learn(self, deltaSeller, deltaBuyer, context):
 

@@ -14,7 +14,6 @@ PROPERTY_INFLATION_PRICE = float(CONFIG_MODEL['property_buy_price_percentage'])
 # List of available strategies
 strategyList = CONFIG_MODEL['active_strategies'].split(',')
 
-
 # Type of game
 ACTIVE_GAME_TYPE = CONFIG_MODEL['game_type']
 
@@ -83,7 +82,9 @@ def emulateDoveDoveStrategy(doveO, doveNO):
     looser.saySomething('I am dove ' + str(looser.unique_id) + ". I retreated")
 
 
-# Traders
+# TRADING STRATEGIES
+
+# Traders vs Traders
 def emulateTradersStrategy(owner, intruder):
     # intruder values the property V = 0.8 * intruder.wealth
     # owner values the property v = owner.owner
@@ -98,13 +99,61 @@ def emulateTradersStrategy(owner, intruder):
     owner.saySomething('We are trading')
 
 
+# Trader vs Trader with ToM0 or ToM1
+def emulateTraderToMStrategy(owner, intruder):
+    # intruder values the property V = 0.8 * intruder.wealth
+    # owner values the property v = owner.owner
+    # owner sells the property for x = (V + v) / 4
+    # x = round((0.8 * intruder.wealth + owner.owner) / 2)
+    v = owner.owner
+    estimated_buying_price = v + (PROPERTY_INFLATION_PRICE * v)
+    x = round((estimated_buying_price - v) / 4)
+    owner.owner = 0
+    owner.wealth += v + x
+    intruder.owner = v + 3 * x
+    intruder.wealth -= v + 3 * x
+    owner.saySomething('We are trading')
+
+
+# Trader with ToM0 or ToM1 vs Trader
+def emulateToMTraderStrategy(owner, intruder):
+    # intruder values the property V = 0.8 * intruder.wealth
+    # owner values the property v = owner.owner
+    # owner sells the property for x = (V + v) / 4
+    # x = round((0.8 * intruder.wealth + owner.owner) / 2)
+    v = owner.owner
+    estimated_buying_price = v + (PROPERTY_INFLATION_PRICE * v)
+    x = round((estimated_buying_price - v) / 4)
+
+    owner.owner = 0
+    owner.wealth += v + 3 * x
+    intruder.owner = v + x
+    intruder.wealth -= v + x
+
+    owner.saySomething('We are trading')
+
+
+# Trader with ToM0 or ToM1 vs Trader with ToM0 or ToM1
+def emulateToMToMStrategy(owner, intruder):
+    # v = owner.owner
+    # estimated_buying_price = v + (PROPERTY_INFLATION_PRICE * v)
+    p = owner.ToMAgent.play(intruder.ToMAgent)
+    if p != None:
+        x = p * intruder.wealth
+
+        owner.owner = 0
+        owner.wealth += x
+        intruder.owner = x
+        intruder.wealth -= x
+
+
 # Get cost of interaction or fight
 def getFightCost(V):
     h = 0
     if ACTIVE_GAME_TYPE == 'prisoners-dilema':
-        h = round(random.uniform(0, V/2))
+        h = round(random.uniform(0, V / 2))
     elif ACTIVE_GAME_TYPE == 'chicken-game':
-        h = round(random.uniform(V/2, V))
+        h = round(random.uniform(V / 2, V))
     return h
 
 
@@ -130,11 +179,11 @@ def naturalSelection(model):
         # strategy wealth is below the overall average wealth
         if average_wealth > strategy_average_wealth:
             percentage_to_kill = (
-                average_wealth - strategy_average_wealth) / average_wealth
+                                         average_wealth - strategy_average_wealth) / average_wealth
             num_agents_to_kill = math.floor(
                 percentage_to_kill * len(strategy_specific_agents))
             agents_to_kill = sorted(strategy_specific_agents, key=lambda agent: agent.wealth + agent.owner)[
-                :num_agents_to_kill]
+                             :num_agents_to_kill]
             for agent in agents_to_kill:
                 agent.die()
 
@@ -150,11 +199,11 @@ def naturalSelection(model):
         strategy_average_wealth = statistics.mean(strategy_specific_wealth)
 
         # If this is a winning strategy - replicate more agents with this strategy
-        # No. of repliactions is proportional to how high the average strategy
+        # No. of replications is proportional to how high the average strategy
         # wealth is above the overall average wealth
         if strategy_average_wealth > average_wealth:
             percentage_to_replicate = (
-                strategy_average_wealth - average_wealth) / average_wealth
+                                              strategy_average_wealth - average_wealth) / average_wealth
             num_agents_to_replicate = math.floor(
                 percentage_to_replicate * len(strategy_specific_agents))
             agents_to_replicate = random.sample(
