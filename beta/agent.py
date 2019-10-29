@@ -8,10 +8,12 @@ import ToM
 CONFIG = configparser.ConfigParser()
 CONFIG.read('./config/config.ini')
 CONFIG_MODEL = CONFIG['model']
+CONFIG_RESULTS = CONFIG['results']
 WEALTH_TYPE = CONFIG_MODEL['initial_wealth_type']
 FIXED_WEALTH_VALUE = int(CONFIG_MODEL['fixed_wealth_value'])
 PROPERTY_INFLATION_PRICE = float(CONFIG_MODEL['property_buy_price_percentage'])
 FIXED_PROPERTY_VALUE = int(CONFIG_MODEL['fixed_property_value'])
+VERBOSE = CONFIG_RESULTS['verbose_mode']
 
 N_DELTAS = 10
 N_CONTEXTS = 10
@@ -213,14 +215,14 @@ class EvolutionaryAgent(Agent):
         Arguments:
             something {string} -- what to say
         """
-        if 1 == 0:
+        if VERBOSE == 'on':
             print(something)
 
     def reproduce(self):
         """Agent can reproduce another agent with it's own strategy
         """
         # generate agent with same strategy as parent
-        print('I am a ' + self.strategy +
+        self.saySomething('I am a ' + self.strategy +
               str(self.unique_id) + ' and I am reproducing')
         new_unique_id = self.model.latest_id + 1
         self.model.latest_id += 1
@@ -251,7 +253,7 @@ class EvolutionaryAgent(Agent):
     def die(self):
         """Death
         """
-        print('I am a ' + self.strategy +
+        self.saySomething('I am a ' + self.strategy +
               str(self.unique_id) + ' and I am dead')
         self.model.grid._remove_agent(self.pos, self)
         self.model.schedule.remove(self)
