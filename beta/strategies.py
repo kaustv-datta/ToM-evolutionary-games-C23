@@ -236,5 +236,14 @@ def naturalSelection(model):
                 percentage_to_replicate * len(strategy_specific_agents))
             agents_to_replicate = random.sample(
                 strategy_specific_agents, num_agents_to_replicate)
+
+            # Give property to a defined percentage of agents
+            num_owners = round(
+                (int(CONFIG_MODEL['percentage_of_owners']) / 100) * num_agents_to_replicate)
+            owner_agents = random.sample(agents_to_replicate, num_owners)
+
+            # reproduce agents with property
             for agent in agents_to_replicate:
-                agent.reproduce()
+                reborn = agent.reproduce()
+                if agent in owner_agents:
+                    reborn.assignPropertyToAgent()
