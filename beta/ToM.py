@@ -27,7 +27,7 @@ class Beliefs0:
 def V(OSeller, OBuyer, i=-1):
 
 	v = np.squeeze(i*OBuyer*np.ones([np.size(OSeller), np.size(OBuyer)]))
-	v[np.transpose(OSeller) > OBuyer] = PENALTY
+	v[np.transpose(OSeller[None]) > OBuyer] = PENALTY
 
 	if i<0:
 		return np.transpose(v)
