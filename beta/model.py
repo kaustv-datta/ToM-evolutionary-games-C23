@@ -71,16 +71,9 @@ class EvolutionaryModel(Model):
         num_owners = round(
             (int(CONFIG_MODEL['percentage_of_owners']) / 100) * len(self.schedule.agents))
         owner_agents = random.sample(self.schedule.agents, num_owners)
-        # Property value is set from config file
+        # Assign property to the agents that are chosen to be owners
         for agent in owner_agents:
-            current_wealth = agent.wealth
-            if WEALTH_TYPE == 'fixed':
-                updated_wealth = current_wealth
-                updated_owner = FIXED_PROPERTY_VALUE
-            else:
-                updated_wealth = round(0.2 * current_wealth)
-                updated_owner = round(0.8 * current_wealth)
-            agent.updateAgentResource(updated_wealth, updated_owner)
+            agent.assignPropertyToAgent()
 
     def step(self):
         """Steps to take at each tick of the model

@@ -51,6 +51,19 @@ class EvolutionaryAgent(Agent):
         """
         return self.wealth + self.owner
 
+    def assignPropertyToAgent(self):
+        """Assign Property to Agent.
+        """
+        current_wealth = self.wealth
+        # Property value is set from config file
+        if WEALTH_TYPE == 'fixed':
+            updated_wealth = current_wealth
+            updated_owner = FIXED_PROPERTY_VALUE
+        else:
+            updated_wealth = round(0.2 * current_wealth)
+            updated_owner = round(0.8 * current_wealth)
+        self.updateAgentResource(updated_wealth, updated_owner)
+
     def updateAgentResource(self, wealth, owner):
         """Update the agent's resources
 
@@ -220,6 +233,9 @@ class EvolutionaryAgent(Agent):
 
     def reproduce(self):
         """Agent can reproduce another agent with it's own strategy
+
+        Returns:
+            object -- Reproduced agent
         """
         # generate agent with same strategy as parent
         self.saySomething('I am a ' + self.strategy +
@@ -234,21 +250,13 @@ class EvolutionaryAgent(Agent):
             initialWealth = random.randrange(int(CONFIG_MODEL['initial_wealth_range_lower']), int(
                 CONFIG_MODEL['initial_wealth_range_upper']))
 
-        # a newborn has a probability to own a property of 50 %
-        owner = 0
-        if random.randrange(1, 11, 1) <= 5:
-            if WEALTH_TYPE == 'fixed':
-                owner = FIXED_PROPERTY_VALUE
-            else:
-                initialWealth = round(0.2 * initialWealth)
-                owner = round(0.8 * initialWealth)
-
         a = EvolutionaryAgent(new_unique_id, self.model,
-                              self.strategy, initialWealth, owner)
+                              self.strategy, initialWealth, 0)
 
         # the reproduced agent will stay on the same position as the parent
         self.model.grid.place_agent(a, self.pos)
         self.model.schedule.add(a)
+        return a
 
     def die(self):
         """Death
