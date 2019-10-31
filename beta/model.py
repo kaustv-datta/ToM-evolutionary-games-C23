@@ -43,6 +43,7 @@ class EvolutionaryModel(Model):
         self.grid = MultiGrid(width, height, True)  # True -> toroid
         self.schedule = RandomActivation(self)
         self.latest_id = N-1
+        self.running = True
 
         # Create agents based on population percentage from config file
         AGENT_ID = 0
@@ -102,7 +103,6 @@ output_df = pd.DataFrame(
     columns=['run', 'step', 'strategy', 'wealth', 'population'])
 
 for sim_run in range(num_simulations):
-    # EvolutionaryModel(N, width, height)
     model = EvolutionaryModel(n_agents, grid_width, grid_height)
     all_wealth = []
     all_strategies = []
@@ -225,21 +225,3 @@ plt.title('Population composition - end of simulation')
 plt.tight_layout()
 plt.savefig(os.path.join(output_folder,  'aggregated_histogram_plot.png'))
 plt.close()
-
-
-# Visualize agents in the model
-# def agent_portrayal(agent):
-#     portrayal = {"Shape": "circle",
-#                  "Color": "red",
-#                  "Filled": "true",
-#                  "Layer": 0,
-#                  "r": 0.5}
-#     return portrayal
-
-# grid = CanvasGrid(agent_portrayal, grid_width, grid_height, 500, 500)
-# server = ModularServer(EvolutionaryModel,
-#                        [grid],
-#                        "Evolutionary Model",
-#                        {"N": n_agents, "width": grid_width, "height": grid_height})
-# server.port = 8521 # The default
-# server.launch()
