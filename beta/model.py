@@ -2,6 +2,8 @@ from mesa import Model
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
 from mesa.datacollection import DataCollector
+from mesa.visualization.modules import CanvasGrid
+from mesa.visualization.ModularVisualization import ModularServer
 from agent import EvolutionaryAgent
 import strategies
 import random
@@ -85,6 +87,8 @@ class EvolutionaryModel(Model):
 
 n_steps = int(CONFIG_MODEL['steps'])
 n_agents = int(CONFIG_MODEL['total_agents'])
+grid_height = int(CONFIG_MODEL['grid_height'])
+grid_width = int(CONFIG_MODEL['grid_width'])
 
 # Repeat entire simluation based on config file
 num_simulations = int(CONFIG_RESULTS['total_runs'])
@@ -99,7 +103,7 @@ output_df = pd.DataFrame(
 
 for sim_run in range(num_simulations):
     # EvolutionaryModel(N, width, height)
-    model = EvolutionaryModel(n_agents, 10, 10)
+    model = EvolutionaryModel(n_agents, grid_width, grid_height)
     all_wealth = []
     all_strategies = []
     all_hawks = []
@@ -162,48 +166,6 @@ for sim_run in range(num_simulations):
         else:
             all_possessors.append(agent.wealth + agent.owner)
 
-    # # shows a histogram of the total number of hawks and doves
-    # plt.figure()
-    # plt.hist((all_strategies))
-    # plt.title("Total number of each remaining strategy")
-    # # plt.show()
-    # plt.savefig(os.path.join(output_folder, 'run_' +
-    #                          str(sim_run) + '_plot1.png'))
-    # plt.close()
-
-    # # shows a histogram of the wealth of hawks and doves
-    # plt.figure()
-    # plt.hist((all_hawks, all_doves, all_traders, all_possessors),
-    #          label=('Hawks', 'Doves', 'Traders', 'Possessors'))
-    # plt.title("Histogram of the wealth each strategy")
-    # plt.legend()
-    # # plt.show()
-    # plt.savefig(os.path.join(output_folder,
-    #                          'run_' + str(sim_run) + '_plot2.png'))
-    # plt.close()
-
-    # plt.figure()
-    # plt.plot(n_hawks, label=('Hawks'))
-    # plt.plot(n_doves, label=('Doves'))
-    # plt.plot(n_traders, label=('Traders'))
-    # plt.plot(n_possessors, label=('Possessors'))
-    # plt.title("Plot of number of hawks and doves at each step")
-    # plt.legend()
-    # # plt.show()
-    # plt.savefig(os.path.join(output_folder,
-    #                          'run_' + str(sim_run) + '_plot3.png'))
-    # plt.close()
-
-    # plt.figure()
-    # plt.plot(n_traders, label=('Traders'))
-    # plt.plot(n_nonTraders, label=('Non-Traders'))
-    # plt.title("Plot of number of traders and non-traders at each step")
-    # plt.legend()
-    # # plt.show()
-    # plt.savefig(os.path.join(output_folder,
-    #                          'run_' + str(sim_run) + '_plot4.png'))
-    # plt.close()
-
 output_df.to_csv(output_folder + '/simulation_results.csv', index=False)
 
 # Create aggregated plots
@@ -263,3 +225,21 @@ plt.title('Population composition - end of simulation')
 plt.tight_layout()
 plt.savefig(os.path.join(output_folder,  'aggregated_histogram_plot.png'))
 plt.close()
+
+
+# Visualize agents in the model
+# def agent_portrayal(agent):
+#     portrayal = {"Shape": "circle",
+#                  "Color": "red",
+#                  "Filled": "true",
+#                  "Layer": 0,
+#                  "r": 0.5}
+#     return portrayal
+
+# grid = CanvasGrid(agent_portrayal, grid_width, grid_height, 500, 500)
+# server = ModularServer(EvolutionaryModel,
+#                        [grid],
+#                        "Evolutionary Model",
+#                        {"N": n_agents, "width": grid_width, "height": grid_height})
+# server.port = 8521 # The default
+# server.launch()
