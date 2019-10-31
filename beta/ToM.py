@@ -136,9 +136,9 @@ class ToM0(ToMAgent):
 	def learn(self, deltaSeller, deltaBuyer, context):
 
 		if self.direction > 0:
-			self.beliefs.observe(deltaBuyer, context)
+			self.beliefs.observe(context, deltaBuyer)
 		else:
-			self.beliefs.observe(self.n_deltas -1 -deltaSeller, context)
+			self.beliefs.observe(context, self.n_deltas -1 - deltaSeller)
 
 
 class ToM1(ToMAgent):
