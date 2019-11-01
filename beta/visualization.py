@@ -17,20 +17,24 @@ grid_width = int(CONFIG_MODEL['grid_width'])
 
 
 def agent_portrayal(agent):
-    portrayal = {"Shape": "circle",
+    portrayal = {"Shape": "rect",
                  "Filled": "true",
                  "Layer": 0,
-                 #  "Color": "red",
-                 "r": 0.5}
+                 "w": 0.8,
+                 "h": 0.8}
 
     if agent.strategy == 'hawk':
-        portrayal["Color"] = "red"
+        portrayal["Color"] = "#1f77b4"
     elif agent.strategy == 'dove':
-        portrayal["Color"] = "yellow"
+        portrayal["Color"] = "#ff7e0e"
     elif agent.strategy == 'possessor':
-        portrayal["Color"] = "blue"
+        portrayal["Color"] = "#2ca02c"
     elif agent.strategy == 'trader':
-        portrayal["Color"] = "green"
+        portrayal["Color"] = "#d62728"
+    elif agent.strategy == 'traderToM0':
+        portrayal["Color"] = "#9467bd"
+    elif agent.strategy == 'traderToM1':
+        portrayal["Color"] = "#8c564b"
 
     return portrayal
 
