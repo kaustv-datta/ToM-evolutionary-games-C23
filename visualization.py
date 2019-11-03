@@ -1,5 +1,3 @@
-# NOTE: before running this module, lines 89 - 227 (end) of model.py needs to be commented
-
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.ModularVisualization import ModularServer
 
