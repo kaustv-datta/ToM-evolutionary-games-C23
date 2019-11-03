@@ -90,63 +90,116 @@ class Beliefs0:
 
 
 class ToMAgent:
-	"""Super class containing general methods for any order of theory of mind"""
+    """Super class containing general methods for any order of theory of mind"""
 
-	def __init__(self, n_deltas, n_contexts, outer, context = lambda offerSeller, offerBuyer : offerSeller - offerBuyer):
-		"""General constructor for any order of theory of mind
+    def __init__(
+            self,
+            n_deltas,
+            n_contexts,
+            outer,
+            context=lambda offerSeller,
+                           offerBuyer: offerSeller -
+                                       offerBuyer):
+        """General constructor for any order of theory of mind
 
-		Arguments:
-			self {ToMAgent object} -- constructed object
-			n_deltas {integer} -- number of bins for deltas interval
-			n_contexts {integer} -- number of bins for contexts interval
-			outer {Agent.Agent} -- agent containing ToMAgent object
-			context {lambda (double, double) -> double} -- function defining how context is computed from the offer of the seller and the buyer
-		"""
+                Arguments:
+                        self {ToMAgent object} -- constructed object
+                        n_deltas {integer} -- number of bins for deltas interval
+                        n_contexts {integer} -- number of bins for contexts interval
+                        outer {Agent.Agent} -- agent containing ToMAgent object
+                        context {lambda (double, double) -> double} -- function defining how context is computed from the offer of the seller and the buyer
+                """
 
-		self.outer = outer
-		self.direction = None
-		self.computeContext = context
+        self.outer = outer
+        self.direction = None
+        self.computeContext = context
 
-		self.possibleDeltas = np.arange(1/(n_deltas+1), 1 , 1/(n_deltas+1))
-		self.n_deltas = n_deltas
-		self.n_contexts = n_contexts
+        self.possibleDeltas = np.arange(
+            1 / (n_deltas + 1), 1, 1 / (n_deltas + 1))
+        self.n_deltas = n_deltas
+        self.n_contexts = n_contexts
 
-	def __call__(self, offerSeller, offerBuyer, context):
-		"""Method to get the agent's action (agent performs a decision)
+    def __call__(self, offerSeller, offerBuyer, context):
+        """Method to get the agent's action (agent performs a decision)
 
-		Arguments:
-			self {ToMAgent} -- agent performing the action
-			offerSeller {dobule} -- offer made by seller in previous round
-			offerBuyer {dobule} -- offer made by buyer in previous round
-			context {integer} -- index of current context's bin
+                Arguments:
+                        self {ToMAgent} -- agent performing the action
+                        offerSeller {dobule} -- offer made by seller in previous round
+                        offerBuyer {dobule} -- offer made by buyer in previous round
+                        context {integer} -- index of current context's bin
 
-		Returns:
-			double -- offer made
-			integer -- index of delta bin used
-		"""
-		pass
+                Returns:
+                        double -- offer made
+                        integer -- index of delta bin used
+                """
+        pass
 
-	def learn(self, deltaSeller, deltaBuyer, context):
-		"""Method to updated agent's beliefs
+    def learn(self, deltaSeller, deltaBuyer, context):
+        """Method to updated agent's beliefs
 
-		Arguments:
-			self {ToMAgent} -- agent whose beliefs are being updated
-			deltaSeller {integer} -- index of bin of delta used by the seller
-			deltaBuyer {integer} -- integer of bin of delta used by the buyer
-			context {integer} -- integer of bin of current context
-		"""
-		pass
+                Arguments:
+                        self {ToMAgent} -- agent whose beliefs are being updated
+                        deltaSeller {integer} -- index of bin of delta used by the seller
+                        deltaBuyer {integer} -- integer of bin of delta used by the buyer
+                        context {integer} -- integer of bin of current context
+                """
+        pass
 
-	def setDirection(self, newDirection, opponent=None):
-		"""Setter for direction field
+    def setDirection(self, newDirection, opponent=None):
+        """Setter for direction field
 
-		Arguments:
-			self {ToMAgent} -- agent whose direction is being set
-			newDirection {-1 or 1} -- new value of direction field
-			opponent {ToMAgent} -- opponent (other end of direction)
-		"""
+                Arguments:
+                        self {ToMAgent} -- agent whose direction is being set
+                        newDirection {-1 or 1} -- new value of direction field
+                        opponent {ToMAgent} -- opponent (other end of direction)
+                """
 
-		self.direction = newDirection
+        self.direction = newDirection
+
+    def play(self, opponent):
+        """Method to let an agnet play with its opponent a full round of offers
+
+                Arguments:
+                        self -- first agent trading
+                        opponent -- other agent trading
+
+                Returns:
+                        double -- concluded price at the end of the trading (None if the trading was not successfull)
+                """
+
+        self.setDirection(
+            1 if self.outer.owner > 0 else -1,
+            opponent)  # when it has a nest aka is a seller
+        opponent.setDirection(-1 * self.direction, self)
+
+        if self.direction < 0:
+            return opponent.play(self)
+
+        # The seller handles the trade (if I get here I am the seller)
+        my_offer = 1.0
+        opponent_offer = 0.0
+
+        while (my_offer > opponent_offer):
+
+            # Get binned context
+            context = self.computeContext(my_offer, opponent_offer)
+            context = math.floor(context * (self.n_contexts - 1))
+
+            # Compute next offers for agents
+            opponent_new, deltaOpponent = opponent(
+                my_offer, opponent_offer, context)
+            my_new, deltaMe = self(my_offer, opponent_offer, context)
+
+            if opponent_offer >= 1 or opponent_offer < 0 or my_offer <= 0 or my_offer > 1:
+                return None
+
+            # Learn
+            opponent.learn(deltaMe, deltaOpponent, context)
+            self.learn(deltaMe, deltaOpponent, context)
+
+            # Update offer values
+            opponent_offer = opponent_new
+            my_offer = my_new
 
         # Add stop condition if offer of buyer is lower then the minimum price of the seller.
         # If this is the case there is no exchange
